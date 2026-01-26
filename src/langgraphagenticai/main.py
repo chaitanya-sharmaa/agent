@@ -60,6 +60,15 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+# Suppress module-level INFO chatter (live_logger handles user-facing info)
+logger.setLevel(logging.WARNING)
+# Silence verbose HTTP client logs in CLI runs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+# Quiet noisy MCP adapter chatter
+logging.getLogger("langchain_mcp_adapters").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("mcp.client.streamable_http").setLevel(logging.WARNING)
 live_logger = get_live_logger()
 
 # Persistent probes file path
@@ -169,13 +178,15 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     formatter = CLIOutputFormatter(show_raw_output=True)
     executor = GraphExecutor(formatter, probe_manager)
     analyzer = ZeroTrustAnalyzer()
-    orchestrator = CLIOrchestrator(graph_builder, executor, analyzer, config)
+    orchestrator = CLIOrchestrator(graph_builder, executor, analyzer, config=config)
 
     # Print execution header
     _print_execution_header(usecase, config)
 
     # Execute workflow based on usecase
-    if "Creator" in usecase:
+    if "comprehensive" in usecase.lower():
+        await orchestrator.run_comprehensive_auditor()
+    elif "Creator" in usecase:
         await orchestrator.run_creator()
     else:
         await orchestrator.run_auditor()

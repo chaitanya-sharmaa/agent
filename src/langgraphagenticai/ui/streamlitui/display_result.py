@@ -18,6 +18,11 @@ class DisplayResultStreamlit:
         Displays the result of the agentic workflow in the Streamlit UI with live progress.
         """
         st.markdown(f"## 🔐 {self.usecase}")
+
+        # Comprehensive auditor follows the exact flow of test_comprehensive.py
+        if "comprehensive" in self.usecase.lower():
+            await self._run_comprehensive_workflow()
+            return
         
         # Create containers for real-time updates
         status_container = st.container()
@@ -556,3 +561,274 @@ OUTPUT ONLY THE JSON ABOVE.'''
                     data=raw_json,
                     file_name=f"{self.usecase.replace(' ', '_')}_raw_results.json",
                     mime="application/json")
+
+    async def _run_comprehensive_workflow(self):
+        """Run the comprehensive audit in Streamlit using the exact logic from test_comprehensive.py."""
+        st.markdown("### STAGE 1: Getting all namespaces")
+
+        model = getattr(self.graph, "_agenticai_model", None)
+        if not model:
+            st.error("LLM model missing for comprehensive audit.")
+            return
+
+        from src.langgraphagenticai.graph.graph_builder import GraphBuilder
+
+        stage1_graph = await GraphBuilder(model).setup_graph("Comprehensive Security Auditor")
+        stage1_input = {"messages": [("user", "Query all Kubernetes namespaces to get the complete list.")]}
+
+        stage1_results = []
+        log_lines = []
+        stage1_log = st.empty()
+
+        async for event in stage1_graph.astream(stage1_input):
+            for node_name, node_output in event.items():
+                log_lines.append(f"[{node_name}]")
+                if node_name == "chatbot":
+                    messages = node_output.get("messages", [])
+                    for msg in messages:
+                        if hasattr(msg, "tool_calls") and msg.tool_calls:
+                            log_lines.append(f"  Tool calls: {len(msg.tool_calls)}")
+                            for tc in msg.tool_calls:
+                                log_lines.append(f"    - {tc.get('name', 'unknown')}: {tc.get('args', {})}")
+                elif node_name == "tools":
+                    for message in node_output.get("messages", []):
+                        if hasattr(message, "content"):
+                            content = message.content
+                            if isinstance(content, list):
+                                for item in content:
+                                    if isinstance(item, dict) and item.get('type') == 'text':
+                                        text_content = item.get('text', '')
+                                        stage1_results.append(text_content)
+                                        log_lines.append(f"  Tool result: {text_content[:200]}...")
+                            elif isinstance(content, str):
+                                stage1_results.append(content)
+                                log_lines.append(f"  Tool result: {content[:200]}...")
+
+            stage1_log.code("\n".join(log_lines[-40:]), language="text")
+
+        namespaces = []
+        for result in stage1_results:
+            try:
+                data = json.loads(result)
+                if "items" in data:
+                    for item in data["items"]:
+                        if item.get("kind") == "Namespace":
+                            ns_name = item.get("name")
+                            namespaces.append(ns_name)
+            except Exception:
+                continue
+
+        st.success(f"Stage 1 Complete: Found {len(namespaces)} namespaces")
+
+        st.markdown("---")
+        st.markdown("### STAGE 2: Querying each resource type individually (direct MCP)")
+
+        resource_types = ["pods", "deployments", "daemonsets", "statefulsets", "rolebindings", "networkpolicies"]
+        test_namespaces = namespaces[:3]
+        total_queries = 0
+        stage2_results = []
+        namespace_resources = {}
+        progress_placeholder = st.empty()
+
+        client = MultiServerMCPClient({
+            "kubernetes": {
+                "url": "http://48.194.37.51:3001/mcp",
+                "transport": "streamable_http",
+            }
+        })
+        tools = await client.get_tools()
+        kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
+
+        for ns_idx, ns in enumerate(test_namespaces, 1):
+            progress_placeholder.markdown(f"Processing namespace {ns_idx}/{len(test_namespaces)}: **{ns}**")
+            ns_query_count = 0
+            ns_tool_calls = []
+            ns_results = {}
+
+            namespace_resources[ns] = {
+                "pods": {"count": 0, "items": []},
+                "deployments": {"count": 0, "items": []},
+                "daemonsets": {"count": 0, "items": []},
+                "statefulsets": {"count": 0, "items": []},
+                "rolebindings": {"count": 0, "items": []},
+                "networkpolicies": {"count": 0, "items": []},
+            }
+
+            for rt in resource_types:
+                args = {"resourceType": rt, "namespace": ns, "output": "json"}
+                try:
+                    result = await kubectl_get_tool.ainvoke(args)
+                    ns_query_count += 1
+                    total_queries += 1
+                    ns_tool_calls.append(f"kubectl_get({rt})")
+                    ns_results[rt] = result
+
+                    parsed = None
+                    if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+                        if "text" in result[0]:
+                            parsed = json.loads(result[0]["text"])
+
+                    if parsed and isinstance(parsed, dict) and "items" in parsed:
+                        items = parsed.get("items", [])
+                        namespace_resources[ns][rt]["count"] = len(items)
+                        namespace_resources[ns][rt]["items"] = items
+
+                    if isinstance(result, dict) and "content" in result:
+                        stage2_results.append(result["content"])
+                    else:
+                        stage2_results.append(str(result))
+                except Exception as e:
+                    ns_tool_calls.append(f"kubectl_get({rt}) [error: {e}]")
+                    ns_results[rt] = {"error": str(e)}
+
+            st.write(f"✅ Executed {ns_query_count} queries for {ns}")
+            st.write(f"Tool calls: {', '.join(ns_tool_calls)}")
+
+            st.markdown(f"**Resources in {ns}:**")
+            for rt in resource_types:
+                st.markdown(f"* {rt.upper()}: ")
+                result_data = ns_results.get(rt)
+                try:
+                    if isinstance(result_data, list) and len(result_data) > 0 and isinstance(result_data[0], dict):
+                        if "text" in result_data[0]:
+                            result_data = json.loads(result_data[0]["text"])
+                        elif "type" in result_data[0] and result_data[0]["type"] == "text":
+                            result_data = json.loads(result_data[0].get("text", "{}"))
+                    elif isinstance(result_data, str):
+                        result_data = json.loads(result_data)
+                    elif isinstance(result_data, dict) and "content" in result_data:
+                        content = result_data["content"]
+                        if isinstance(content, str):
+                            result_data = json.loads(content)
+                        elif isinstance(content, list) and len(content) > 0:
+                            if isinstance(content[0], dict) and "text" in content[0]:
+                                result_data = json.loads(content[0]["text"])
+                            else:
+                                result_data = content[0]
+                        else:
+                            result_data = content
+
+                    if isinstance(result_data, dict) and "items" in result_data:
+                        items = result_data["items"]
+                        if items:
+                            st.write(f"  ✓ Found {len(items)} {rt}")
+                            for item in items[:2]:
+                                name = item.get("name", "unknown")
+                                st.write(f"    - {name}")
+                        else:
+                            st.write(f"  No {rt} found")
+                    else:
+                        st.write(f"  Result: {str(result_data)[:80]}")
+                except Exception as e:
+                    st.write(f"  Error parsing: {str(e)[:60]}")
+
+        st.success(f"Stage 2 Complete: Executed {total_queries} total queries")
+
+        st.markdown("---")
+        st.markdown("### COMPREHENSIVE SECURITY AUDIT ANALYSIS")
+
+        for ns in test_namespaces:
+            st.markdown(f"#### 📦 NAMESPACE: {ns.upper()}")
+            resources = namespace_resources[ns]
+
+            table_rows = []
+            for rt in resource_types:
+                count = resources[rt]["count"]
+                status = "✓ Found" if count > 0 else "○ Empty"
+                table_rows.append({"Resource Type": rt, "Count": count, "Status": status})
+            st.table(table_rows)
+
+            for rt in resource_types:
+                items = resources[rt]["items"]
+                if items:
+                    st.markdown(f"**{rt.upper()} ({len(items)} found):**")
+                    for item in items[:5]:
+                        name = item.get("name", "unknown")
+                        status = item.get("status", {}).get("phase", "N/A") if isinstance(item.get("status"), dict) else "N/A"
+                        st.write(f"✓ {name} [Status: {status}]")
+                    if len(items) > 5:
+                        st.write(f"... and {len(items) - 5} more")
+
+        st.markdown("---")
+        st.markdown("### 🔒 SECURITY ASSESSMENT")
+
+        security_findings = {
+            "high_risk": [],
+            "medium_risk": [],
+            "low_risk": [],
+            "suggestions": []
+        }
+
+        total_pods = sum(r["pods"]["count"] for r in namespace_resources.values())
+        total_deployments = sum(r["deployments"]["count"] for r in namespace_resources.values())
+        total_daemonsets = sum(r["daemonsets"]["count"] for r in namespace_resources.values())
+        total_statefulsets = sum(r["statefulsets"]["count"] for r in namespace_resources.values())
+        total_rolebindings = sum(r["rolebindings"]["count"] for r in namespace_resources.values())
+        total_networkpolicies = sum(r["networkpolicies"]["count"] for r in namespace_resources.values())
+
+        if total_pods == 0:
+            security_findings["low_risk"].append("No pods running in queried namespaces")
+
+        if total_networkpolicies == 0:
+            security_findings["high_risk"].append("⚠️  NO NETWORK POLICIES FOUND - Cluster may lack network segmentation")
+            security_findings["suggestions"].append("• Implement NetworkPolicies to restrict pod-to-pod communication")
+            security_findings["suggestions"].append("• Create default-deny policies and allow specific flows")
+
+        if total_deployments > 0 and total_rolebindings == 0:
+            security_findings["medium_risk"].append("Deployments found but no role bindings defined")
+            security_findings["suggestions"].append("• Define RoleBindings for proper RBAC control")
+
+        if total_daemonsets > 0:
+            security_findings["medium_risk"].append("DaemonSets detected - ensure they run only on intended nodes")
+            security_findings["suggestions"].append("• Review DaemonSet node selectors and taints/tolerations")
+
+        if total_statefulsets > 0:
+            security_findings["medium_risk"].append("StatefulSets found - verify persistent volume security")
+            security_findings["suggestions"].append("• Ensure PVCs have proper access controls")
+            security_findings["suggestions"].append("• Implement StorageClass encryption policies")
+
+        security_findings["suggestions"].append("• Enable Pod Security Standards (PSS) for namespace enforcement")
+        security_findings["suggestions"].append("• Implement admission controllers (OPA/Gatekeeper) for policy enforcement")
+        security_findings["suggestions"].append("• Enable audit logging for all API calls")
+        security_findings["suggestions"].append("• Use ImagePullSecrets to secure container image access")
+
+        st.markdown("**Resource Inventory:**")
+        st.write(f"Total Pods: {total_pods}")
+        st.write(f"Total Deployments: {total_deployments}")
+        st.write(f"Total DaemonSets: {total_daemonsets}")
+        st.write(f"Total StatefulSets: {total_statefulsets}")
+        st.write(f"Total RoleBindings: {total_rolebindings}")
+        st.write(f"Total NetworkPolicies: {total_networkpolicies}")
+
+        if security_findings["high_risk"]:
+            st.markdown("**🔴 HIGH RISK FINDINGS:**")
+            for finding in security_findings["high_risk"]:
+                st.write(f"- {finding}")
+
+        if security_findings["medium_risk"]:
+            st.markdown("**🟠 MEDIUM RISK FINDINGS:**")
+            for finding in security_findings["medium_risk"]:
+                st.write(f"- {finding}")
+
+        if security_findings["low_risk"]:
+            st.markdown("**🟡 LOW RISK FINDINGS:**")
+            for finding in security_findings["low_risk"]:
+                st.write(f"- {finding}")
+
+        st.markdown("**💡 RECOMMENDATIONS:**")
+        for suggestion in security_findings["suggestions"]:
+            st.write(f"- {suggestion}")
+
+        st.markdown("---")
+        st.markdown("### SUMMARY")
+        st.write(f"Namespaces found: {len(namespaces)}")
+        st.write(f"Namespaces queried: {len(test_namespaces)} (test mode)")
+        st.write(f"Resource types per namespace: {len(resource_types)}")
+        st.write(f"Expected total queries: {len(test_namespaces) * len(resource_types)}")
+        st.write(f"Actual queries executed: {total_queries}")
+
+        if total_queries >= len(test_namespaces) * len(resource_types):
+            st.success("SUCCESS: All expected queries executed!")
+        else:
+            missing = len(test_namespaces) * len(resource_types) - total_queries
+            st.error(f"ISSUE: Missing {missing} queries. Check the Stage 2 prompt and execution logic.")

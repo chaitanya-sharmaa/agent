@@ -109,6 +109,7 @@ class LiveLogger:
             
         self.logger = logging.getLogger('langgraphagenticai.live')
         self.logger.setLevel(logging.DEBUG)
+        self.logger.propagate = False  # Avoid duplicate logs via root handlers
         
         # Remove existing handlers
         self.logger.handlers = []

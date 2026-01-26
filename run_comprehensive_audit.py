@@ -15,7 +15,7 @@ import os
 # Add repo to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
-from src.langgraphagenticai.main import main
+from src.langgraphagenticai.main import _initialize_and_run
 
 
 def print_header():
@@ -44,7 +44,7 @@ To run the comprehensive security audit:
      python -m src.langgraphagenticai.main --no-ui comprehensive_auditor
 
   2. Using Streamlit UI:
-     python3 -m src.langgraphagenticai.main
+     streamlit run app.py
      Then select "Comprehensive Security Auditor" from dropdown
 
 OUTPUT:
@@ -78,5 +78,5 @@ if __name__ == "__main__":
     
     print_header()
     
-    # Run the comprehensive audit
-    asyncio.run(main(workflow_id="comprehensive_auditor", use_ui=False))
+    # Run the comprehensive audit via application initialization
+    asyncio.run(_initialize_and_run(usecase="comprehensive_auditor"))
