@@ -208,7 +208,8 @@ class DisplayResultStreamlit:
             progress_placeholder = st.empty()
             resource_types = ["pods", "deployments", "daemonsets", "statefulsets", "rolebindings", "networkpolicies"]
             cluster_resources = ["clusterroles", "clusterrolebindings", "peerauthentication", "authorizationpolicy"]
-            total_queries = len(namespaces) * len(resource_types) + len(cluster_resources)
+            all_namespaces = namespaces
+            total_queries = len(all_namespaces) * len(resource_types) + len(cluster_resources)
             query_count = 0
 
             # Initialize MCP client and kubectl_get tool
@@ -579,6 +580,7 @@ OUTPUT ONLY THE JSON ABOVE.'''
         stage1_results = []
         log_lines = []
         stage1_log = st.empty()
+        tool_call_count = 0
 
         async for event in stage1_graph.astream(stage1_input):
             for node_name, node_output in event.items():
@@ -603,8 +605,13 @@ OUTPUT ONLY THE JSON ABOVE.'''
                             elif isinstance(content, str):
                                 stage1_results.append(content)
                                 log_lines.append(f"  Tool result: {content[:200]}...")
+                            tool_call_count += 1
 
             stage1_log.code("\n".join(log_lines[-40:]), language="text")
+            
+            # Stop after first tool execution (we only need namespaces)
+            if tool_call_count > 0:
+                break
 
         namespaces = []
         for result in stage1_results:
@@ -624,7 +631,7 @@ OUTPUT ONLY THE JSON ABOVE.'''
         st.markdown("### STAGE 2: Querying each resource type individually (direct MCP)")
 
         resource_types = ["pods", "deployments", "daemonsets", "statefulsets", "rolebindings", "networkpolicies"]
-        test_namespaces = namespaces[:3]
+        all_namespaces = namespaces
         total_queries = 0
         stage2_results = []
         namespace_resources = {}
@@ -639,8 +646,8 @@ OUTPUT ONLY THE JSON ABOVE.'''
         tools = await client.get_tools()
         kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
 
-        for ns_idx, ns in enumerate(test_namespaces, 1):
-            progress_placeholder.markdown(f"Processing namespace {ns_idx}/{len(test_namespaces)}: **{ns}**")
+        for ns_idx, ns in enumerate(all_namespaces, 1):
+            progress_placeholder.markdown(f"Processing namespace {ns_idx}/{len(all_namespaces)}: **{ns}**")
             ns_query_count = 0
             ns_tool_calls = []
             ns_results = {}
@@ -727,7 +734,7 @@ OUTPUT ONLY THE JSON ABOVE.'''
         st.markdown("---")
         st.markdown("### COMPREHENSIVE SECURITY AUDIT ANALYSIS")
 
-        for ns in test_namespaces:
+        for ns in all_namespaces:
             st.markdown(f"#### 📦 NAMESPACE: {ns.upper()}")
             resources = namespace_resources[ns]
 
@@ -743,8 +750,46 @@ OUTPUT ONLY THE JSON ABOVE.'''
                 if items:
                     st.markdown(f"**{rt.upper()} ({len(items)} found):**")
                     for item in items[:5]:
-                        name = item.get("name", "unknown")
-                        status = item.get("status", {}).get("phase", "N/A") if isinstance(item.get("status"), dict) else "N/A"
+                        # Handle both dict and potentially nested structures
+                        if isinstance(item, dict):
+                            name = item.get("name") or item.get("metadata", {}).get("name", "unknown")
+                        else:
+                            name = "unknown"
+                        
+                        # Extract status based on resource type
+                        status_obj = item.get("status", {}) if isinstance(item, dict) else {}
+                        status = "Active"  # Default to Active for resources that exist
+                        
+                        if rt == "pods":
+                            if isinstance(status_obj, dict):
+                                status = status_obj.get("phase", "Active")
+                        elif rt == "deployments":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("readyReplicas", 0)
+                                desired = status_obj.get("replicas", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        elif rt == "statefulsets":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("readyReplicas", 0)
+                                desired = status_obj.get("replicas", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        elif rt in ["rolebindings", "networkpolicies"]:
+                            status = "Applied"
+                        elif rt == "daemonsets":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("numberReady", 0)
+                                desired = status_obj.get("desiredNumberScheduled", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        
                         st.write(f"✓ {name} [Status: {status}]")
                     if len(items) > 5:
                         st.write(f"... and {len(items) - 5} more")
@@ -822,13 +867,14 @@ OUTPUT ONLY THE JSON ABOVE.'''
         st.markdown("---")
         st.markdown("### SUMMARY")
         st.write(f"Namespaces found: {len(namespaces)}")
-        st.write(f"Namespaces queried: {len(test_namespaces)} (test mode)")
+        expected_queries = len(namespace_resources) * len(resource_types)
+        st.write(f"Namespaces queried: {len(namespace_resources)}")
         st.write(f"Resource types per namespace: {len(resource_types)}")
-        st.write(f"Expected total queries: {len(test_namespaces) * len(resource_types)}")
+        st.write(f"Expected total queries: {expected_queries}")
         st.write(f"Actual queries executed: {total_queries}")
 
-        if total_queries >= len(test_namespaces) * len(resource_types):
+        if total_queries >= expected_queries:
             st.success("SUCCESS: All expected queries executed!")
         else:
-            missing = len(test_namespaces) * len(resource_types) - total_queries
-            st.error(f"ISSUE: Missing {missing} queries. Check the Stage 2 prompt and execution logic.")
+            missing = expected_queries - total_queries
+            st.error(f"ISSUE: Missing {missing} queries. Check the Stage 2 prompt and execution logic (some tool calls may have failed).")

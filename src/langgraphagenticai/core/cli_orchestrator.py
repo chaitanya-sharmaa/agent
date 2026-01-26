@@ -76,6 +76,7 @@ class CLIOrchestrator:
         stage1_input = {"messages": [("user", "Query all Kubernetes namespaces to get the complete list.")]}
 
         stage1_results = []
+        tool_call_count = 0
         async for event in stage1_graph.astream(stage1_input):
             for node_name, node_output in event.items():
                 print(f"\n[{node_name}]")
@@ -99,6 +100,11 @@ class CLIOrchestrator:
                             elif isinstance(content, str):
                                 stage1_results.append(content)
                                 print(f"  Tool result: {content[:200]}...")
+                            tool_call_count += 1
+                            
+            # Stop after first tool execution (we only need namespaces)
+            if tool_call_count > 0:
+                break
 
         # Parse namespaces
         namespaces = []
@@ -122,7 +128,7 @@ class CLIOrchestrator:
         print("=" * 80)
 
         resource_types = ["pods", "deployments", "daemonsets", "statefulsets", "rolebindings", "networkpolicies"]
-        test_namespaces = namespaces[:3]
+        all_namespaces = namespaces
         total_queries = 0
         stage2_results = []
         namespace_resources = {}
@@ -136,8 +142,8 @@ class CLIOrchestrator:
         tools = await client.get_tools()
         kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
 
-        for ns_idx, ns in enumerate(test_namespaces, 1):
-            print(f"\n📦 Processing namespace {ns_idx}/{len(test_namespaces)}: {ns}")
+        for ns_idx, ns in enumerate(all_namespaces, 1):
+            print(f"\n📦 Processing namespace {ns_idx}/{len(all_namespaces)}: {ns}")
             print("=" * 80)
             ns_query_count = 0
             ns_tool_calls = []
@@ -170,6 +176,15 @@ class CLIOrchestrator:
                         items = parsed.get("items", [])
                         namespace_resources[ns][rt]["count"] = len(items)
                         namespace_resources[ns][rt]["items"] = items
+                        
+                        # DEBUG: Print first item structure
+                        if items and len(items) > 0:
+                            print(f"\n      [DEBUG {rt}] First item keys: {list(items[0].keys()) if isinstance(items[0], dict) else 'not a dict'}")
+                            if isinstance(items[0], dict):
+                                print(f"      [DEBUG {rt}] name: {items[0].get('name')}")
+                                print(f"      [DEBUG {rt}] status keys: {list(items[0].get('status', {}).keys()) if isinstance(items[0].get('status'), dict) else 'no status'}")
+                                if isinstance(items[0].get('status'), dict):
+                                    print(f"      [DEBUG {rt}] status.phase: {items[0].get('status', {}).get('phase')}")
 
                     if isinstance(result, dict) and "content" in result:
                         stage2_results.append(result["content"])
@@ -227,7 +242,7 @@ class CLIOrchestrator:
         print("COMPREHENSIVE SECURITY AUDIT ANALYSIS")
         print("=" * 80)
 
-        for ns in test_namespaces:
+        for ns in all_namespaces:
             print(f"\n\n{'='*80}")
             print(f"📦 NAMESPACE: {ns.upper()}")
             print('='*80)
@@ -246,8 +261,46 @@ class CLIOrchestrator:
                 if items:
                     print(f"\n  📋 {rt.upper()} ({len(items)} found):")
                     for item in items[:5]:
-                        name = item.get("name", "unknown")
-                        status = item.get("status", {}).get("phase", "N/A") if isinstance(item.get("status"), dict) else "N/A"
+                        # Handle both dict and potentially nested structures
+                        if isinstance(item, dict):
+                            name = item.get("name") or item.get("metadata", {}).get("name", "unknown")
+                        else:
+                            name = "unknown"
+                        
+                        # Extract status based on resource type
+                        status_obj = item.get("status", {}) if isinstance(item, dict) else {}
+                        status = "Active"  # Default to Active for resources that exist
+                        
+                        if rt == "pods":
+                            if isinstance(status_obj, dict):
+                                status = status_obj.get("phase", "Active")
+                        elif rt == "deployments":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("readyReplicas", 0)
+                                desired = status_obj.get("replicas", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        elif rt == "statefulsets":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("readyReplicas", 0)
+                                desired = status_obj.get("replicas", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        elif rt in ["rolebindings", "networkpolicies"]:
+                            status = "Applied"
+                        elif rt == "daemonsets":
+                            if isinstance(status_obj, dict):
+                                ready = status_obj.get("numberReady", 0)
+                                desired = status_obj.get("desiredNumberScheduled", 0)
+                                if desired > 0:
+                                    status = f"{ready}/{desired} Ready"
+                                else:
+                                    status = "Pending"
+                        
                         print(f"     ✓ {name:<40} [Status: {status}]")
                     if len(items) > 5:
                         print(f"     ... and {len(items) - 5} more")
@@ -328,17 +381,18 @@ class CLIOrchestrator:
         print("\n" + "=" * 80)
         print("SUMMARY")
         print("=" * 80)
+        expected_queries = len(namespace_resources) * len(resource_types)
         print(f"Namespaces found: {len(namespaces)}")
-        print(f"Namespaces queried: {len(test_namespaces)} (test mode)")
+        print(f"Namespaces queried: {len(namespace_resources)}")
         print(f"Resource types per namespace: {len(resource_types)}")
-        print(f"Expected total queries: {len(test_namespaces) * len(resource_types)}")
+        print(f"Expected total queries: {expected_queries}")
         print(f"Actual queries executed: {total_queries}")
 
-        if total_queries >= len(test_namespaces) * len(resource_types):
+        if total_queries >= expected_queries:
             print("\n✅ SUCCESS: All expected queries executed!")
         else:
-            print(f"\n❌ ISSUE: Missing {len(test_namespaces) * len(resource_types) - total_queries} queries")
-            print("   Check the Stage 2 prompt and execution logic")
+            print(f"\n❌ ISSUE: Missing {expected_queries - total_queries} queries")
+            print("   Check the Stage 2 prompt and execution logic (some tool calls may have failed)")
 
         print("\n" + "=" * 80)
 
