@@ -284,6 +284,38 @@ class CLIOrchestrator:
         print("COMPREHENSIVE SECURITY AUDIT ANALYSIS")
         print("=" * 80)
 
+        # Helper functions for security analysis
+        def add_finding_local(findings_dict, level: str, text: str, standards: str = ""):
+            suffix = f" [{standards}]" if standards else ""
+            findings_dict[level].append(f"{text}{suffix}")
+
+        def check_workload_list_local(items, ns_name, kind_label, findings_dict):
+            standards_priv = "NIST CM-7, CIS 5.2.x"
+            for wk in items[:3]:
+                spec = wk.get("spec", {}) if isinstance(wk, dict) else {}
+                tpl = spec.get("template", {}).get("spec", {}) if isinstance(spec.get("template"), dict) else spec
+                sc = tpl.get("securityContext", {}) if isinstance(tpl, dict) else {}
+                if tpl.get("hostNetwork"):
+                    add_finding_local(findings_dict, "medium_risk", f"{kind_label} uses hostNetwork", standards_priv)
+                if sc:
+                    if sc.get("runAsUser") in (0, "0") or sc.get("runAsNonRoot") is False:
+                        add_finding_local(findings_dict, "medium_risk", f"{kind_label} runs as root", standards_priv)
+                    if sc.get("privileged"):
+                        add_finding_local(findings_dict, "high_risk", f"{kind_label} is privileged", standards_priv)
+                for c in tpl.get("containers", []) if isinstance(tpl.get("containers"), list) else []:
+                    csc = c.get("securityContext", {}) if isinstance(c, dict) else {}
+                    if csc.get("privileged"):
+                        add_finding_local(findings_dict, "high_risk", f"Container privileged", standards_priv)
+                    if csc.get("allowPrivilegeEscalation") is True:
+                        add_finding_local(findings_dict, "medium_risk", f"Container allows privilege escalation", standards_priv)
+                    img = c.get("image") if isinstance(c, dict) else None
+                    if img and ":latest" in img:
+                        add_finding_local(findings_dict, "low_risk", f"Container uses latest tag", "NIST CM-8")
+
+        standards_netpol = "NIST AC-4, CIS 5.x, NSA/CISA Segmentation"
+        standards_mtls = "NIST SC-8/SC-13, CIS 5.1.6, NSA/CISA mTLS"
+        standards_ingress = "NIST AC-4, CIS 5.x"
+
         for ns in all_namespaces:
             print(f"\n\n{'='*80}")
             print(f"📦 NAMESPACE: {ns.upper()}")
@@ -347,27 +379,104 @@ class CLIOrchestrator:
                     if len(items) > 5:
                         print(f"     ... and {len(items) - 5} more")
 
+            # Per-namespace security assessment
+            ns_findings = {
+                "high_risk": [],
+                "medium_risk": [],
+                "low_risk": [],
+                "suggestions": []
+            }
+
+            # NetworkPolicy coverage
+            if resources.get("pods", {}).get("count", 0) > 0 and resources.get("networkpolicies", {}).get("count", 0) == 0:
+                add_finding_local(ns_findings, "high_risk", "Namespace has workloads but NO NetworkPolicies", standards_netpol)
+                ns_findings["suggestions"].append("• Add default-deny ingress/egress NetworkPolicies")
+
+            # Services / Ingress exposure
+            for svc in resources.get("services", {}).get("items", [])[:3]:
+                svc_type = (svc.get("spec", {}) or {}).get("type") if isinstance(svc, dict) else None
+                if svc_type in {"LoadBalancer", "NodePort"} and resources.get("networkpolicies", {}).get("count", 0) == 0:
+                    add_finding_local(ns_findings, "medium_risk", f"Service {svc.get('name','unknown')} is {svc_type} without NetworkPolicy", standards_ingress)
+            
+            for ing in resources.get("ingresses", {}).get("items", [])[:3]:
+                tls = (ing.get("spec", {}) or {}).get("tls") if isinstance(ing, dict) else None
+                hosts = (ing.get("spec", {}) or {}).get("rules") if isinstance(ing, dict) else None
+                if not tls:
+                    add_finding_local(ns_findings, "medium_risk", "Ingress missing TLS", standards_ingress)
+                if hosts:
+                    for rule in hosts:
+                        host = rule.get("host") if isinstance(rule, dict) else None
+                        if host and host in {"*", "0.0.0.0/0"}:
+                            add_finding_local(ns_findings, "medium_risk", "Ingress uses wildcard host", standards_ingress)
+                            break
+
+            # Istio VirtualService/DestinationRule/Gateway
+            for vs in resources.get("virtualservices", {}).get("items", [])[:3]:
+                hosts = vs.get("spec", {}).get("hosts") if isinstance(vs, dict) else None
+                if hosts and any(h == "*" for h in hosts):
+                    add_finding_local(ns_findings, "medium_risk", "VirtualService allows wildcard hosts", "NIST SC-7, NSA/CISA")
+            
+            for dr in resources.get("destinationrules", {}).get("items", [])[:3]:
+                tls = dr.get("spec", {}).get("trafficPolicy", {}).get("tls") if isinstance(dr, dict) else None
+                if tls is None:
+                    add_finding_local(ns_findings, "low_risk", "DestinationRule lacks TLS settings", standards_mtls)
+            
+            for gw in resources.get("gateways", {}).get("items", [])[:3]:
+                servers = gw.get("spec", {}).get("servers") if isinstance(gw, dict) else None
+                if servers:
+                    for srv in servers:
+                        if not srv.get("tls"):
+                            add_finding_local(ns_findings, "medium_risk", "Gateway server missing TLS", standards_mtls)
+                            break
+
+            # Workload security contexts
+            check_workload_list_local(resources.get("pods", {}).get("items", []), ns, "Pod", ns_findings)
+            check_workload_list_local(resources.get("deployments", {}).get("items", []), ns, "Deployment", ns_findings)
+            check_workload_list_local(resources.get("daemonsets", {}).get("items", []), ns, "DaemonSet", ns_findings)
+            check_workload_list_local(resources.get("statefulsets", {}).get("items", []), ns, "StatefulSet", ns_findings)
+
+            # Print namespace findings if any
+            if ns_findings["high_risk"] or ns_findings["medium_risk"] or ns_findings["low_risk"]:
+                print(f"\n  🔒 SECURITY FINDINGS:")
+                
+                if ns_findings["high_risk"]:
+                    print(f"\n  🔴 HIGH RISK:")
+                    for finding in ns_findings["high_risk"]:
+                        print(f"    {finding}")
+                
+                if ns_findings["medium_risk"]:
+                    print(f"\n  🟠 MEDIUM RISK:")
+                    for finding in ns_findings["medium_risk"]:
+                        print(f"    {finding}")
+                
+                if ns_findings["low_risk"]:
+                    print(f"\n  🟡 LOW RISK:")
+                    for finding in ns_findings["low_risk"]:
+                        print(f"    {finding}")
+
+                if ns_findings["suggestions"]:
+                    print(f"\n  💡 RECOMMENDATIONS:")
+                    for suggestion in ns_findings["suggestions"]:
+                        print(f"    {suggestion}")
+
         print(f"\n\n{'='*80}")
-        print("🔒 SECURITY ASSESSMENT")
+        print("🔒 CLUSTER-WIDE SECURITY ASSESSMENT")
         print('='*80)
 
-        security_findings = {
+        # Cluster-wide security findings only
+        cluster_findings = {
             "high_risk": [],
             "medium_risk": [],
             "low_risk": [],
             "suggestions": []
         }
 
-        def add_finding(level: str, text: str, standards: str = ""):
+        def add_cluster_finding(level: str, text: str, standards: str = ""):
             suffix = f" [{standards}]" if standards else ""
-            security_findings[level].append(f"{text}{suffix}")
+            cluster_findings[level].append(f"{text}{suffix}")
 
-        # Helpers for standards tags
-        standards_netpol = "NIST AC-4, CIS 5.x, NSA/CISA Segmentation"
         standards_mtls = "NIST SC-8/SC-13, CIS 5.1.6, NSA/CISA mTLS"
         standards_rbac = "NIST AC-3, CIS 1.x/2.x"
-        standards_ingress = "NIST AC-4, CIS 5.x"
-        standards_priv = "NIST CM-7, CIS 5.2.x"
 
         total_pods = sum(r["pods"]["count"] for r in namespace_resources.values())
         total_deployments = sum(r["deployments"]["count"] for r in namespace_resources.values())
@@ -376,120 +485,38 @@ class CLIOrchestrator:
         total_rolebindings = sum(r["rolebindings"]["count"] for r in namespace_resources.values())
         total_networkpolicies = sum(r["networkpolicies"]["count"] for r in namespace_resources.values())
 
-        if total_pods == 0:
-            add_finding("low_risk", "No pods running in queried namespaces")
-
-        # NetworkPolicy coverage
-        for ns, res in namespace_resources.items():
-            if res.get("pods", {}).get("count", 0) > 0 and res.get("networkpolicies", {}).get("count", 0) == 0:
-                add_finding("high_risk", f"Namespace {ns} has workloads but NO NetworkPolicies", standards_netpol)
-                security_findings["suggestions"].append("• Add default-deny ingress/egress NetworkPolicies per namespace")
-
         # mTLS / AuthorizationPolicy
         peer_items = cluster_resources.get("peerauthentication", {}).get("items", [])
         if not peer_items:
-            add_finding("high_risk", "No PeerAuthentication found (mTLS likely not enforced)", standards_mtls)
-            security_findings["suggestions"].append("• Enforce STRICT mTLS mesh-wide via PeerAuthentication")
+            add_cluster_finding("high_risk", "No PeerAuthentication found (mTLS likely not enforced)", standards_mtls)
+            cluster_findings["suggestions"].append("• Enforce STRICT mTLS mesh-wide via PeerAuthentication")
         else:
             for pa in peer_items:
                 mode = pa.get("spec", {}).get("mtls", {}).get("mode") if isinstance(pa.get("spec"), dict) else None
                 if mode and str(mode).lower() == "permissive":
-                    add_finding("medium_risk", "PeerAuthentication set to PERMISSIVE", standards_mtls)
-                    security_findings["suggestions"].append("• Set PeerAuthentication mtls.mode to STRICT")
+                    add_cluster_finding("medium_risk", "PeerAuthentication set to PERMISSIVE", standards_mtls)
+                    cluster_findings["suggestions"].append("• Set PeerAuthentication mtls.mode to STRICT")
                     break
 
         authz_items = cluster_resources.get("authorizationpolicy", {}).get("items", [])
         if not authz_items:
-            add_finding("medium_risk", "No AuthorizationPolicy found (no authZ restrictions)", "NIST AC-3, CIS 5.x")
-            security_findings["suggestions"].append("• Add AuthorizationPolicy to restrict service-to-service access")
+            add_cluster_finding("medium_risk", "No AuthorizationPolicy found (no authZ restrictions)", "NIST AC-3, CIS 5.x")
+            cluster_findings["suggestions"].append("• Add AuthorizationPolicy to restrict service-to-service access")
 
         # RBAC breadth
         crb_items = cluster_resources.get("clusterrolebindings", {}).get("items", [])
         for crb in crb_items:
             role_ref = (crb.get("roleRef", {}) or {}).get("name") if isinstance(crb, dict) else None
             if role_ref and "cluster-admin" in role_ref:
-                add_finding("high_risk", "ClusterRoleBinding grants cluster-admin", standards_rbac)
-                security_findings["suggestions"].append("• Limit cluster-admin bindings; use namespace-scoped roles")
+                add_cluster_finding("high_risk", "ClusterRoleBinding grants cluster-admin", standards_rbac)
+                cluster_findings["suggestions"].append("• Limit cluster-admin bindings; use namespace-scoped roles")
                 break
 
-        # Default/infra namespaces without policies
-        for ns in all_namespaces:
-            if ns in {"default", "kube-system", "kube-public", "aks-command"}:
-                res = namespace_resources.get(ns, {})
-                if res.get("pods", {}).get("count", 0) > 0 and res.get("networkpolicies", {}).get("count", 0) == 0:
-                    add_finding("medium_risk", f"{ns} has workloads without NetworkPolicy", standards_netpol)
-
-        # Services / Ingress exposure
-        for ns, res in namespace_resources.items():
-            for svc in res.get("services", {}).get("items", [])[:3]:
-                svc_type = (svc.get("spec", {}) or {}).get("type") if isinstance(svc, dict) else None
-                if svc_type in {"LoadBalancer", "NodePort"} and res.get("networkpolicies", {}).get("count", 0) == 0:
-                    add_finding("medium_risk", f"Service {svc.get('name','unknown')} in {ns} is {svc_type} without NetworkPolicy", standards_ingress)
-            for ing in res.get("ingresses", {}).get("items", [])[:3]:
-                tls = (ing.get("spec", {}) or {}).get("tls") if isinstance(ing, dict) else None
-                hosts = (ing.get("spec", {}) or {}).get("rules") if isinstance(ing, dict) else None
-                if not tls:
-                    add_finding("medium_risk", f"Ingress in {ns} missing TLS", standards_ingress)
-                if hosts:
-                    for rule in hosts:
-                        host = rule.get("host") if isinstance(rule, dict) else None
-                        if host and host in {"*", "0.0.0.0/0"}:
-                            add_finding("medium_risk", f"Ingress in {ns} uses wildcard host", standards_ingress)
-                            break
-
-        # Istio VirtualService/DestinationRule/Gateway basics
-        for ns, res in namespace_resources.items():
-            for vs in res.get("virtualservices", {}).get("items", [])[:3]:
-                hosts = vs.get("spec", {}).get("hosts") if isinstance(vs, dict) else None
-                if hosts and any(h == "*" for h in hosts):
-                    add_finding("medium_risk", f"VirtualService in {ns} allows wildcard hosts", "NIST SC-7, NSA/CISA")
-            for dr in res.get("destinationrules", {}).get("items", [])[:3]:
-                tls = dr.get("spec", {}).get("trafficPolicy", {}).get("tls") if isinstance(dr, dict) else None
-                if tls is None:
-                    add_finding("low_risk", f"DestinationRule in {ns} lacks TLS settings", standards_mtls)
-            for gw in res.get("gateways", {}).get("items", [])[:3]:
-                servers = gw.get("spec", {}).get("servers") if isinstance(gw, dict) else None
-                if servers:
-                    for srv in servers:
-                        if not srv.get("tls"):
-                            add_finding("medium_risk", f"Gateway in {ns} server missing TLS", standards_mtls)
-                            break
-
-        # Pod/Deployment security context (sampled)
-        def check_workload_list(items, ns_name, kind_label):
-            for wk in items[:3]:
-                spec = wk.get("spec", {}) if isinstance(wk, dict) else {}
-                tpl = spec.get("template", {}).get("spec", {}) if isinstance(spec.get("template"), dict) else spec
-                sc = tpl.get("securityContext", {}) if isinstance(tpl, dict) else {}
-                if tpl.get("hostNetwork"):
-                    add_finding("medium_risk", f"{kind_label} in {ns_name} uses hostNetwork", standards_priv)
-                if sc:
-                    if sc.get("runAsUser") in (0, "0") or sc.get("runAsNonRoot") is False:
-                        add_finding("medium_risk", f"{kind_label} in {ns_name} runs as root", standards_priv)
-                    if sc.get("privileged"):
-                        add_finding("high_risk", f"{kind_label} in {ns_name} is privileged", standards_priv)
-                # container-level securityContext
-                for c in tpl.get("containers", []) if isinstance(tpl.get("containers"), list) else []:
-                    csc = c.get("securityContext", {}) if isinstance(c, dict) else {}
-                    if csc.get("privileged"):
-                        add_finding("high_risk", f"Container in {ns_name} privileged", standards_priv)
-                    if csc.get("allowPrivilegeEscalation") is True:
-                        add_finding("medium_risk", f"Container in {ns_name} allows privilege escalation", standards_priv)
-                    img = c.get("image") if isinstance(c, dict) else None
-                    if img and ":latest" in img:
-                        add_finding("low_risk", f"Container in {ns_name} uses latest tag", "NIST CM-8")
-
-        for ns, res in namespace_resources.items():
-            check_workload_list(res.get("pods", {}).get("items", []), ns, "Pod")
-            check_workload_list(res.get("deployments", {}).get("items", []), ns, "Deployment")
-            check_workload_list(res.get("daemonsets", {}).get("items", []), ns, "DaemonSet")
-            check_workload_list(res.get("statefulsets", {}).get("items", []), ns, "StatefulSet")
-
-        # Suggestions baseline
-        security_findings["suggestions"].append("• Enable Pod Security Standards (PSS) or PSA enforcing baseline/restricted")
-        security_findings["suggestions"].append("• Implement admission controls (OPA/Gatekeeper/Kyverno) for policy enforcement")
-        security_findings["suggestions"].append("• Enable audit logging for all API calls")
-        security_findings["suggestions"].append("• Use ImagePullSecrets and pinned image tags")
+        # General recommendations
+        cluster_findings["suggestions"].append("• Enable Pod Security Standards (PSS) or PSA enforcing baseline/restricted")
+        cluster_findings["suggestions"].append("• Implement admission controls (OPA/Gatekeeper/Kyverno) for policy enforcement")
+        cluster_findings["suggestions"].append("• Enable audit logging for all API calls")
+        cluster_findings["suggestions"].append("• Use ImagePullSecrets and pinned image tags")
 
         print(f"\n📊 RESOURCE INVENTORY:")
         print(f"  Total Pods:              {total_pods}")
@@ -499,23 +526,23 @@ class CLIOrchestrator:
         print(f"  Total RoleBindings:      {total_rolebindings}")
         print(f"  Total NetworkPolicies:   {total_networkpolicies}")
 
-        if security_findings["high_risk"]:
+        if cluster_findings["high_risk"]:
             print(f"\n🔴 HIGH RISK FINDINGS:")
-            for finding in security_findings["high_risk"]:
+            for finding in cluster_findings["high_risk"]:
                 print(f"  {finding}")
 
-        if security_findings["medium_risk"]:
+        if cluster_findings["medium_risk"]:
             print(f"\n🟠 MEDIUM RISK FINDINGS:")
-            for finding in security_findings["medium_risk"]:
+            for finding in cluster_findings["medium_risk"]:
                 print(f"  {finding}")
 
-        if security_findings["low_risk"]:
+        if cluster_findings["low_risk"]:
             print(f"\n🟡 LOW RISK FINDINGS:")
-            for finding in security_findings["low_risk"]:
+            for finding in cluster_findings["low_risk"]:
                 print(f"  {finding}")
 
         print(f"\n💡 RECOMMENDATIONS:")
-        for suggestion in security_findings["suggestions"]:
+        for suggestion in cluster_findings["suggestions"]:
             print(f"  {suggestion}")
 
         print(f"\n✅ Stage 2 Complete: Executed {total_queries} total queries")
