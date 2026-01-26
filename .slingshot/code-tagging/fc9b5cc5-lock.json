@@ -1,0 +1,616 @@
+{
+  "TROUBLESHOOTING_GUIDE.md": {
+    "f": "TROUBLESHOOTING_GUIDE.md",
+    "p": "TROUBLESHOOTING_GUIDE.md",
+    "v": "v1",
+    "c": {
+      "49a051": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766492087,
+        "hash": "cdea50b3",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "l": {
+      "0": {
+        "chunkId": "49a051",
+        "hash": "0bf7c2b9",
+        "encoded": "#%20LangGraph%20AgenticAI%20Troubleshooting%20Guide",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "49a051",
+        "hash": "31fab9ef",
+        "encoded": "##%20Issue:%20Tool%20Calls%20Not%20Being%20Executed",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "49a051",
+        "hash": "db51619b",
+        "encoded": "Based%20on%20the%20analysis%20of%20your%20workspace,%20I've%20identified%20the%20core%20issue%20and%20solution.",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "49a051",
+        "hash": "551c67f9",
+        "encoded": "###%20Problem%20Summary",
+        "prevChunkIds": []
+      },
+      "7": {
+        "chunkId": "49a051",
+        "hash": "2e78b0dc",
+        "encoded": "The%20LangGraph%20workflow%20is%20generating%20tool%20call%20instructions%20in%20JSON%20format%20but%20not%20actually%20executing%20them.%20The%20output%20shows:",
+        "prevChunkIds": []
+      },
+      "8": {
+        "chunkId": "49a051",
+        "hash": "7f69ec7c",
+        "encoded": "-%20AI%20generates%20correct%20kubectl_get%20tool%20call%20syntax",
+        "prevChunkIds": []
+      },
+      "9": {
+        "chunkId": "49a051",
+        "hash": "e412fc69",
+        "encoded": "-%20No%20actual%20tool%20execution%20occurs",
+        "prevChunkIds": []
+      },
+      "10": {
+        "chunkId": "49a051",
+        "hash": "fcea4ef7",
+        "encoded": "-%20%22No%20Tool%20Results%20Found%22%20message%20appears",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "49a051",
+        "hash": "6b32d32c",
+        "encoded": "###%20Root%20Cause%20Analysis",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "49a051",
+        "hash": "8b97bf70",
+        "encoded": "1.%20**MCP%20Server%20Connection**:%20The%20MCP%20server%20is%20running%20on%20localhost:3001%20(confirmed%20by%20curl%20test)",
+        "prevChunkIds": []
+      },
+      "15": {
+        "chunkId": "49a051",
+        "hash": "3d78a128",
+        "encoded": "2.%20**Tool%20Binding**:%20Tools%20are%20properly%20fetched%20and%20bound%20to%20the%20LLM%20in%20%60graph_builder.py%60",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "49a051",
+        "hash": "91c7145e",
+        "encoded": "3.%20**Issue**:%20The%20Ollama%20model%20is%20not%20generating%20tool%20calls%20in%20the%20expected%20format",
+        "prevChunkIds": []
+      },
+      "18": {
+        "chunkId": "49a051",
+        "hash": "c8915641",
+        "encoded": "###%20The%20Core%20Problem",
+        "prevChunkIds": []
+      },
+      "20": {
+        "chunkId": "49a051",
+        "hash": "2ef34560",
+        "encoded": "The%20issue%20lies%20in%20how%20Ollama%20models%20handle%20tool%20calling.%20Looking%20at%20your%20code:",
+        "prevChunkIds": []
+      },
+      "22": {
+        "chunkId": "49a051",
+        "hash": "8500ec95",
+        "encoded": "1.%20In%20%60ollamallm.py%60,%20you're%20using%20%60ChatOllama%60%20from%20%60langchain_ollama%60",
+        "prevChunkIds": []
+      },
+      "23": {
+        "chunkId": "49a051",
+        "hash": "a80e3276",
+        "encoded": "2.%20The%20model%20is%20configured%20with%20%60temperature=0.0%60%20for%20deterministic%20output",
+        "prevChunkIds": []
+      },
+      "24": {
+        "chunkId": "49a051",
+        "hash": "68bac30b",
+        "encoded": "3.%20However,%20**Ollama%20models%20don't%20natively%20support%20function/tool%20calling**%20in%20the%20same%20way%20as%20OpenAI%20or%20Anthropic%20models",
+        "prevChunkIds": []
+      },
+      "26": {
+        "chunkId": "49a051",
+        "hash": "a4708a6d",
+        "encoded": "###%20Why%20It's%20Failing",
+        "prevChunkIds": []
+      },
+      "28": {
+        "chunkId": "49a051",
+        "hash": "7d86c8ac",
+        "encoded": "When%20the%20LLM%20responds%20with%20JSON-formatted%20tool%20calls%20like:",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "49a051",
+        "hash": "2cfe76ce",
+        "encoded": "%60%60%60json",
+        "prevChunkIds": []
+      },
+      "30": {
+        "chunkId": "49a051",
+        "hash": "a508025f",
+        "encoded": "%7B",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "49a051",
+        "hash": "0cde22a7",
+        "encoded": "%22name%22:%20%22kubectl_get%22,",
+        "prevChunkIds": []
+      },
+      "32": {
+        "chunkId": "49a051",
+        "hash": "1e7956e5",
+        "encoded": "%22parameters%22:%20%7B",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "49a051",
+        "hash": "cd48433a",
+        "encoded": "%22resourceType%22:%20%22namespaces%22,",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "49a051",
+        "hash": "3c930a1b",
+        "encoded": "%22output%22:%20%22yaml%22",
+        "prevChunkIds": []
+      },
+      "35": {
+        "chunkId": "49a051",
+        "hash": "dfad4947",
+        "encoded": "%7D",
+        "prevChunkIds": []
+      },
+      "36": {
+        "chunkId": "49a051",
+        "hash": "b14d68ea",
+        "encoded": "%7D",
+        "prevChunkIds": []
+      },
+      "37": {
+        "chunkId": "49a051",
+        "hash": "465274ea",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "39": {
+        "chunkId": "49a051",
+        "hash": "412c109c",
+        "encoded": "This%20is%20just%20**text%20output**,%20not%20an%20actual%20tool%20call%20that%20LangGraph%20can%20intercept%20and%20execute.",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "49a051",
+        "hash": "019ea24f",
+        "encoded": "###%20Solutions",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "49a051",
+        "hash": "5c7ad08d",
+        "encoded": "####%20Solution%201:%20Use%20a%20Model%20with%20Native%20Tool%20Support",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "49a051",
+        "hash": "93c8fe71",
+        "encoded": "Replace%20Ollama%20with%20a%20model%20that%20supports%20tool%20calling:",
+        "prevChunkIds": []
+      },
+      "47": {
+        "chunkId": "49a051",
+        "hash": "9e64939a",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "49a051",
+        "hash": "982b87df",
+        "encoded": "#%20Option%20A:%20Use%20OpenAI",
+        "prevChunkIds": []
+      },
+      "49": {
+        "chunkId": "49a051",
+        "hash": "16545777",
+        "encoded": "from%20langchain_openai%20import%20ChatOpenAI",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "49a051",
+        "hash": "8376bd5e",
+        "encoded": "llm%20=%20ChatOpenAI(model=%22gpt-4%22,%20temperature=0.0)",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "49a051",
+        "hash": "4ae441f0",
+        "encoded": "#%20Option%20B:%20Use%20Anthropic",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "49a051",
+        "hash": "30af52fd",
+        "encoded": "from%20langchain_anthropic%20import%20ChatAnthropic",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "49a051",
+        "hash": "4c82e921",
+        "encoded": "llm%20=%20ChatAnthropic(model=%22claude-3-sonnet-20240229%22,%20temperature=0.0)",
+        "prevChunkIds": []
+      },
+      "55": {
+        "chunkId": "49a051",
+        "hash": "40e23bdf",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "57": {
+        "chunkId": "49a051",
+        "hash": "8bc5a351",
+        "encoded": "####%20Solution%202:%20Use%20Ollama%20with%20Tool%20Calling%20Support%20(if%20available)",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "49a051",
+        "hash": "e1041f1b",
+        "encoded": "Some%20newer%20Ollama%20models%20might%20support%20tool%20calling.%20Check%20if%20your%20model%20supports%20it:",
+        "prevChunkIds": []
+      },
+      "61": {
+        "chunkId": "49a051",
+        "hash": "c87e3050",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "62": {
+        "chunkId": "49a051",
+        "hash": "543acf30",
+        "encoded": "#%20In%20ollamallm.py,%20try%20models%20like:",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "49a051",
+        "hash": "1bd1dcba",
+        "encoded": "llm%20=%20ChatOllama(model=%22mistral:latest%22,%20temperature=0.0)",
+        "prevChunkIds": []
+      },
+      "64": {
+        "chunkId": "49a051",
+        "hash": "e38b5e26",
+        "encoded": "#%20or",
+        "prevChunkIds": []
+      },
+      "65": {
+        "chunkId": "49a051",
+        "hash": "383ff2e3",
+        "encoded": "llm%20=%20ChatOllama(model=%22llama3.1:latest%22,%20temperature=0.0,%20format=%22json%22)",
+        "prevChunkIds": []
+      },
+      "66": {
+        "chunkId": "49a051",
+        "hash": "7b8bac46",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "68": {
+        "chunkId": "49a051",
+        "hash": "fad55ea8",
+        "encoded": "####%20Solution%203:%20Implement%20a%20Tool%20Call%20Parser%20(Workaround)",
+        "prevChunkIds": []
+      },
+      "70": {
+        "chunkId": "49a051",
+        "hash": "a8995590",
+        "encoded": "If%20you%20must%20use%20Ollama,%20implement%20a%20parser%20to%20detect%20and%20execute%20tool%20calls:",
+        "prevChunkIds": []
+      },
+      "72": {
+        "chunkId": "49a051",
+        "hash": "b8e8d70e",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "49a051",
+        "hash": "5f02c434",
+        "encoded": "#%20In%20chatbot_with_Tool_node.py",
+        "prevChunkIds": []
+      },
+      "74": {
+        "chunkId": "49a051",
+        "hash": "63a64410",
+        "encoded": "import%20json",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "49a051",
+        "hash": "fc00971b",
+        "encoded": "import%20re",
+        "prevChunkIds": []
+      },
+      "77": {
+        "chunkId": "49a051",
+        "hash": "f569dd9e",
+        "encoded": "def%20parse_tool_calls_from_content(content):",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "49a051",
+        "hash": "11ebd2b2",
+        "encoded": "%22%22%22Extract%20tool%20calls%20from%20LLM%20text%20output%22%22%22",
+        "prevChunkIds": []
+      },
+      "79": {
+        "chunkId": "49a051",
+        "hash": "e862b767",
+        "encoded": "tool_calls%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "80": {
+        "chunkId": "49a051",
+        "hash": "0932f8c4",
+        "encoded": "#%20Look%20for%20JSON%20blocks%20that%20represent%20tool%20calls",
+        "prevChunkIds": []
+      },
+      "81": {
+        "chunkId": "49a051",
+        "hash": "dd845120",
+        "encoded": "json_pattern%20=%20r'%60%60%60json%5Cs*(%7B.*?%7D)%5Cs*%60%60%60'",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "49a051",
+        "hash": "fbd24323",
+        "encoded": "matches%20=%20re.findall(json_pattern,%20content,%20re.DOTALL)",
+        "prevChunkIds": []
+      },
+      "84": {
+        "chunkId": "49a051",
+        "hash": "add560a7",
+        "encoded": "for%20match%20in%20matches:",
+        "prevChunkIds": []
+      },
+      "85": {
+        "chunkId": "49a051",
+        "hash": "af7badd0",
+        "encoded": "try:",
+        "prevChunkIds": []
+      },
+      "86": {
+        "chunkId": "49a051",
+        "hash": "966b4cea",
+        "encoded": "tool_data%20=%20json.loads(match)",
+        "prevChunkIds": []
+      },
+      "87": {
+        "chunkId": "49a051",
+        "hash": "b7e95757",
+        "encoded": "if%20%22name%22%20in%20tool_data%20and%20%22parameters%22%20in%20tool_data:",
+        "prevChunkIds": []
+      },
+      "88": {
+        "chunkId": "49a051",
+        "hash": "ffb6f423",
+        "encoded": "tool_calls.append(tool_data)",
+        "prevChunkIds": []
+      },
+      "89": {
+        "chunkId": "49a051",
+        "hash": "75c4e64a",
+        "encoded": "except%20json.JSONDecodeError:",
+        "prevChunkIds": []
+      },
+      "90": {
+        "chunkId": "49a051",
+        "hash": "6908445e",
+        "encoded": "pass",
+        "prevChunkIds": []
+      },
+      "92": {
+        "chunkId": "49a051",
+        "hash": "2e101c86",
+        "encoded": "return%20tool_calls",
+        "prevChunkIds": []
+      },
+      "93": {
+        "chunkId": "49a051",
+        "hash": "c32ab8e3",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "95": {
+        "chunkId": "49a051",
+        "hash": "57287afa",
+        "encoded": "###%20Recommended%20Fix",
+        "prevChunkIds": []
+      },
+      "97": {
+        "chunkId": "49a051",
+        "hash": "3da4f3f5",
+        "encoded": "The%20most%20reliable%20solution%20is%20to%20use%20a%20model%20with%20native%20tool%20calling%20support.%20If%20you're%20committed%20to%20using%20Ollama,%20you'll%20need%20to:",
+        "prevChunkIds": []
+      },
+      "99": {
+        "chunkId": "49a051",
+        "hash": "56bd0733",
+        "encoded": "1.%20Check%20if%20your%20Ollama%20model%20version%20supports%20tool%20calling",
+        "prevChunkIds": []
+      },
+      "100": {
+        "chunkId": "49a051",
+        "hash": "660be999",
+        "encoded": "2.%20Update%20the%20model%20binding%20code%20to%20properly%20format%20tool%20schemas",
+        "prevChunkIds": []
+      },
+      "101": {
+        "chunkId": "49a051",
+        "hash": "91aaf347",
+        "encoded": "3.%20Potentially%20implement%20a%20custom%20tool%20call%20parser",
+        "prevChunkIds": []
+      },
+      "103": {
+        "chunkId": "49a051",
+        "hash": "343c17f0",
+        "encoded": "###%20CLI%20Command",
+        "prevChunkIds": []
+      },
+      "105": {
+        "chunkId": "49a051",
+        "hash": "f3eb8f8d",
+        "encoded": "The%20correct%20command%20to%20run%20your%20application%20is:",
+        "prevChunkIds": []
+      },
+      "107": {
+        "chunkId": "49a051",
+        "hash": "e1ef3577",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "108": {
+        "chunkId": "49a051",
+        "hash": "02dd11dd",
+        "encoded": "python%20-m%20src.langgraphagenticai.main%20--no-ui",
+        "prevChunkIds": []
+      },
+      "109": {
+        "chunkId": "49a051",
+        "hash": "7ee5fd0c",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "111": {
+        "chunkId": "49a051",
+        "hash": "8552f6b4",
+        "encoded": "Or%20if%20you're%20in%20the%20project%20root:",
+        "prevChunkIds": []
+      },
+      "113": {
+        "chunkId": "49a051",
+        "hash": "1d456a45",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "114": {
+        "chunkId": "49a051",
+        "hash": "1f4db16c",
+        "encoded": "python%20src/langgraphagenticai/main.py%20--no-ui",
+        "prevChunkIds": []
+      },
+      "115": {
+        "chunkId": "49a051",
+        "hash": "c50f9948",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "117": {
+        "chunkId": "49a051",
+        "hash": "610774e5",
+        "encoded": "###%20Verification%20Steps",
+        "prevChunkIds": []
+      },
+      "119": {
+        "chunkId": "49a051",
+        "hash": "e7f2faa1",
+        "encoded": "1.%20**Check%20MCP%20Server**:%20Ensure%20it's%20running%20on%20localhost:3001",
+        "prevChunkIds": []
+      },
+      "120": {
+        "chunkId": "49a051",
+        "hash": "5701d084",
+        "encoded": "2.%20**Test%20Tool%20Binding**:%20Add%20debug%20logging%20in%20%60graph_builder.py%60:",
+        "prevChunkIds": []
+      },
+      "121": {
+        "chunkId": "49a051",
+        "hash": "3a94d83a",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "122": {
+        "chunkId": "49a051",
+        "hash": "cd47d6d0",
+        "encoded": "tools%20=%20await%20get_tools()",
+        "prevChunkIds": []
+      },
+      "123": {
+        "chunkId": "49a051",
+        "hash": "00c99394",
+        "encoded": "print(f%22Available%20tools:%20%7B%5Btool.name%20for%20tool%20in%20tools%5D%7D%22)",
+        "prevChunkIds": []
+      },
+      "124": {
+        "chunkId": "49a051",
+        "hash": "3b55dd73",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "125": {
+        "chunkId": "49a051",
+        "hash": "e8b955a0",
+        "encoded": "3.%20**Monitor%20Tool%20Calls**:%20In%20%60chatbot_with_Tool_node.py%60,%20log%20the%20response:",
+        "prevChunkIds": []
+      },
+      "126": {
+        "chunkId": "49a051",
+        "hash": "59e1ca35",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "127": {
+        "chunkId": "49a051",
+        "hash": "439c67d0",
+        "encoded": "print(f%22Tool%20calls%20in%20response:%20%7Bgetattr(response,%20'tool_calls',%20%5B%5D)%7D%22)",
+        "prevChunkIds": []
+      },
+      "128": {
+        "chunkId": "49a051",
+        "hash": "f89c7fc2",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "130": {
+        "chunkId": "49a051",
+        "hash": "2c5426f8",
+        "encoded": "###%20Next%20Steps",
+        "prevChunkIds": []
+      },
+      "132": {
+        "chunkId": "49a051",
+        "hash": "f8eb01c0",
+        "encoded": "1.%20Consider%20switching%20to%20a%20model%20with%20native%20tool%20calling%20support",
+        "prevChunkIds": []
+      },
+      "133": {
+        "chunkId": "49a051",
+        "hash": "8c8e95e4",
+        "encoded": "2.%20If%20using%20Ollama,%20verify%20your%20model%20supports%20function%20calling",
+        "prevChunkIds": []
+      },
+      "134": {
+        "chunkId": "49a051",
+        "hash": "2740e132",
+        "encoded": "3.%20Add%20proper%20error%20handling%20and%20logging%20throughout%20the%20tool%20execution%20chain",
+        "prevChunkIds": []
+      },
+      "135": {
+        "chunkId": "49a051",
+        "hash": "1d858f4a",
+        "encoded": "4.%20Test%20with%20a%20simple%20tool%20first%20before%20complex%20kubectl%20operations",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

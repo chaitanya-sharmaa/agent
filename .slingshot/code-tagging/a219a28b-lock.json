@@ -1,0 +1,553 @@
+{
+  "src/langgraphagenticai/ui/streamlitui/display_result.py": {
+    "filename": "display_result.py",
+    "path": "src/langgraphagenticai/ui/streamlitui/display_result.py",
+    "version": "1.1",
+    "chunks": {
+      "587938": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766504789,
+        "hash": "f2d025cf",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      },
+      "6c3ac0": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766503647,
+        "hash": "5956c9f1",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      }
+    },
+    "lines": {
+      "0": {
+        "chunkId": "6c3ac0",
+        "hash": "7a475144",
+        "encoded": "import%20streamlit%20as%20st",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "1": {
+        "chunkId": "6c3ac0",
+        "hash": "1bc81f17",
+        "encoded": "from%20langchain_core.messages%20import%20AIMessage,%20ToolMessage",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "2": {
+        "chunkId": "6c3ac0",
+        "hash": "1633a2c6",
+        "encoded": "from%20src.langgraphagenticai.utils.zero_trust_analyzer%20import%20ZeroTrustAnalyzer",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "3": {
+        "chunkId": "6c3ac0",
+        "hash": "4d606077",
+        "encoded": "from%20src.langgraphagenticai.utils.cli_output_formatter%20import%20CLIOutputFormatter",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "4": {
+        "chunkId": "6c3ac0",
+        "hash": "b634a002",
+        "encoded": "import%20json",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "6": {
+        "chunkId": "6c3ac0",
+        "hash": "595f7bf8",
+        "encoded": "class%20DisplayResultStreamlit:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "8": {
+        "chunkId": "6c3ac0",
+        "hash": "d09c88b2",
+        "encoded": "def%20__init__(self,%20graph,%20usecase):",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "9": {
+        "chunkId": "6c3ac0",
+        "hash": "46b09a9d",
+        "encoded": "self.graph%20=%20graph",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "10": {
+        "chunkId": "6c3ac0",
+        "hash": "596ea104",
+        "encoded": "self.usecase%20=%20usecase",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "11": {
+        "chunkId": "6c3ac0",
+        "hash": "0de2a07a",
+        "encoded": "self.tool_results%20=%20%5B%5D",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "12": {
+        "chunkId": "6c3ac0",
+        "hash": "48365505",
+        "encoded": "self.formatter%20=%20CLIOutputFormatter(show_raw_output=False)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "14": {
+        "chunkId": "587938",
+        "hash": "3c68905f",
+        "encoded": "async%20def%20display_result_on_ui(self):",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "16": {
+        "chunkId": "587938",
+        "hash": "22407482",
+        "encoded": "%22%22%22",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "17": {
+        "chunkId": "587938",
+        "hash": "6a16c9ba",
+        "encoded": "Displays%20the%20result%20of%20the%20agentic%20workflow%20in%20the%20Streamlit%20UI.",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "18": {
+        "chunkId": "587938",
+        "hash": "4c60f0d0",
+        "encoded": "%22%22%22",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "19": {
+        "chunkId": "587938",
+        "hash": "35b17592",
+        "encoded": "st.write(f%22Executing:%20%7Bself.usecase%7D%22)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "23": {
+        "chunkId": "587938",
+        "hash": "bdad1e96",
+        "encoded": "#%20Create%20containers%20for%20different%20types%20of%20output",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "24": {
+        "chunkId": "587938",
+        "hash": "4b05fe3f",
+        "encoded": "progress_container%20=%20st.container()",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "26": {
+        "chunkId": "587938",
+        "hash": "b4d77e11",
+        "encoded": "tool_output_container%20=%20st.container()",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "587938",
+        "hash": "25c6df71",
+        "encoded": "final_result_container%20=%20st.container()",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "29": {
+        "chunkId": "587938",
+        "hash": "20dd5acc",
+        "encoded": "with%20progress_container:",
+        "prevChunkIds": []
+      },
+      "30": {
+        "chunkId": "587938",
+        "hash": "04554e20",
+        "encoded": "progress_bar%20=%20st.progress(0)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "31": {
+        "chunkId": "587938",
+        "hash": "bd8e4dec",
+        "encoded": "status_text%20=%20st.empty()",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "36": {
+        "chunkId": "587938",
+        "hash": "b8154ed9",
+        "encoded": "event_count%20=%200",
+        "prevChunkIds": []
+      },
+      "37": {
+        "chunkId": "587938",
+        "hash": "de5b208b",
+        "encoded": "total_expected_events%20=%2010%20%20#%20Approximate%20number%20of%20events",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "41": {
+        "chunkId": "587938",
+        "hash": "791973da",
+        "encoded": "try:",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "587938",
+        "hash": "27098da9",
+        "encoded": "self.formatter.process_event(event)",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "587938",
+        "hash": "1407e0bf",
+        "encoded": "for%20k,%20v%20in%20event.items():",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "587938",
+        "hash": "b1307c87",
+        "encoded": "if%20k%20==%20%22tools%22:",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "587938",
+        "hash": "b2f737df",
+        "encoded": "if%20%22messages%22%20in%20v:",
+        "prevChunkIds": []
+      },
+      "49": {
+        "chunkId": "587938",
+        "hash": "b567b92a",
+        "encoded": "for%20msg%20in%20v%5B%22messages%22%5D:",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "587938",
+        "hash": "697cf44c",
+        "encoded": "if%20isinstance(msg,%20ToolMessage)%20and%20msg.content:",
+        "prevChunkIds": []
+      },
+      "51": {
+        "chunkId": "587938",
+        "hash": "7cb09253",
+        "encoded": "self.tool_results.append(%7B%22output%22:%20msg.content%7D)",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "587938",
+        "hash": "8aee15c4",
+        "encoded": "with%20tool_output_container:",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "587938",
+        "hash": "88c1ada1",
+        "encoded": "st.code(msg.content,%20language=%22yaml%22)",
+        "prevChunkIds": []
+      },
+      "56": {
+        "chunkId": "587938",
+        "hash": "30ec263b",
+        "encoded": "elif%20k%20==%20%22agent%22:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "58": {
+        "chunkId": "587938",
+        "hash": "61296807",
+        "encoded": "if%20%22messages%22%20in%20v:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "59": {
+        "chunkId": "587938",
+        "hash": "f911489d",
+        "encoded": "for%20msg%20in%20v%5B%22messages%22%5D:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "60": {
+        "chunkId": "587938",
+        "hash": "54b85977",
+        "encoded": "if%20isinstance(msg,%20AIMessage)%20and%20msg.content:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "63": {
+        "chunkId": "6c3ac0",
+        "hash": "4e23cd47",
+        "encoded": "with%20final_result_container:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "64": {
+        "chunkId": "6c3ac0",
+        "hash": "e077272c",
+        "encoded": "st.markdown(%22##%20Zero%20Trust%20Security%20Assessment%22)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "68": {
+        "chunkId": "587938",
+        "hash": "5534c10a",
+        "encoded": "with%20tool_output_container:",
+        "prevChunkIds": []
+      },
+      "70": {
+        "chunkId": "587938",
+        "hash": "44b34608",
+        "encoded": "st.write(msg.content)",
+        "prevChunkIds": []
+      },
+      "71": {
+        "chunkId": "587938",
+        "hash": "d24a03fd",
+        "encoded": "else:",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "587938",
+        "hash": "f2f97380",
+        "encoded": "st.markdown(%22###%20AI%20Analysis%22)",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "587938",
+        "hash": "74750e2b",
+        "encoded": "except%20Exception%20as%20e:",
+        "prevChunkIds": []
+      },
+      "76": {
+        "chunkId": "587938",
+        "hash": "2f68de1b",
+        "encoded": "#%20Handle%20the%20specific%20error%20about%20'list'%20object%20has%20no%20attribute%20'lower'",
+        "prevChunkIds": []
+      },
+      "77": {
+        "chunkId": "587938",
+        "hash": "a0de8dd1",
+        "encoded": "if%20%22'list'%20object%20has%20no%20attribute%20'lower'%22%20in%20str(e):",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "587938",
+        "hash": "2624c9ae",
+        "encoded": "st.warning(%22Graph%20execution%20encountered%20an%20issue.%20Processing%20available%20results...%22)",
+        "prevChunkIds": []
+      },
+      "79": {
+        "chunkId": "6c3ac0",
+        "hash": "87bee6ec",
+        "encoded": "else:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "80": {
+        "chunkId": "587938",
+        "hash": "e1b6d259",
+        "encoded": "st.error(f%22Error%20during%20execution:%20%7Be%7D%22)",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "6c3ac0",
+        "hash": "8e36f820",
+        "encoded": "#%20Complete%20the%20progress%20bar",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "83": {
+        "chunkId": "6c3ac0",
+        "hash": "4e23d3ed",
+        "encoded": "progress_bar.progress(1.0)",
+        "prevChunkIds": []
+      },
+      "84": {
+        "chunkId": "6c3ac0",
+        "hash": "f7fc7f1f",
+        "encoded": "status_text.text(%22Analysis%20complete!%22)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "87": {
+        "chunkId": "6c3ac0",
+        "hash": "bd7a5c9c",
+        "encoded": "final_output%20=%20self.formatter.get_final_output()",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "91": {
+        "chunkId": "6c3ac0",
+        "hash": "f3d18afc",
+        "encoded": "st.markdown(%22---%22)",
+        "prevChunkIds": []
+      },
+      "97": {
+        "chunkId": "6c3ac0",
+        "hash": "3a1e04ae",
+        "encoded": "try:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "98": {
+        "chunkId": "6c3ac0",
+        "hash": "6c2f19e9",
+        "encoded": "analyzer%20=%20ZeroTrustAnalyzer()",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "102": {
+        "chunkId": "6c3ac0",
+        "hash": "316f6d2d",
+        "encoded": "except%20Exception%20as%20e:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "103": {
+        "chunkId": "6c3ac0",
+        "hash": "4f7a5ef4",
+        "encoded": "st.error(f%22Error%20generating%20Zero%20Trust%20assessment:%20%7Be%7D%22)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "105": {
+        "chunkId": "6c3ac0",
+        "hash": "00fab31b",
+        "encoded": "else:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "107": {
+        "chunkId": "6c3ac0",
+        "hash": "81c055ec",
+        "encoded": "if%20final_output:",
+        "prevChunkIds": []
+      },
+      "108": {
+        "chunkId": "6c3ac0",
+        "hash": "4f022250",
+        "encoded": "st.markdown(%22##%20Results%22)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "109": {
+        "chunkId": "6c3ac0",
+        "hash": "9eb41636",
+        "encoded": "st.write(final_output)",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "111": {
+        "chunkId": "6c3ac0",
+        "hash": "6578093f",
+        "encoded": "st.info(%22No%20specific%20output%20generated.%20Check%20the%20tool%20outputs%20above.%22)",
+        "prevChunkIds": []
+      },
+      "113": {
+        "chunkId": "6c3ac0",
+        "hash": "10946c1b",
+        "encoded": "#%20Add%20a%20download%20button%20for%20the%20results",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "114": {
+        "chunkId": "6c3ac0",
+        "hash": "c9c2f2f7",
+        "encoded": "if%20tool_results%20or%20self.tool_results:",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "115": {
+        "chunkId": "6c3ac0",
+        "hash": "8ae01b15",
+        "encoded": "results_json%20=%20json.dumps(tool_results%20if%20tool_results%20else%20self.tool_results,%20indent=2)",
+        "prevChunkIds": []
+      },
+      "116": {
+        "chunkId": "6c3ac0",
+        "hash": "ca4a2dfe",
+        "encoded": "st.download_button(",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "117": {
+        "chunkId": "6c3ac0",
+        "hash": "94d5aa12",
+        "encoded": "label=%22Download%20Raw%20Results%22,",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      },
+      "118": {
+        "chunkId": "6c3ac0",
+        "hash": "6d783c70",
+        "encoded": "data=results_json,",
+        "prevChunkIds": []
+      },
+      "119": {
+        "chunkId": "6c3ac0",
+        "hash": "2c58494f",
+        "encoded": "file_name=f%22%7Bself.usecase.replace('%20',%20'_')%7D_results.json%22,",
+        "prevChunkIds": [
+          "6c3ac0"
+        ]
+      }
+    }
+  }
+}

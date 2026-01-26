@@ -1,0 +1,560 @@
+{
+  "Users/rohkumar46/chatbot-web/src/langgraphagenticai/utils/zero_trust_analyzer.py": {
+    "f": "zero_trust_analyzer.py",
+    "p": "Users/rohkumar46/chatbot-web/src/langgraphagenticai/utils/zero_trust_analyzer.py",
+    "v": "v1",
+    "c": {
+      "63632b": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493763,
+        "hash": "2c97a6f3",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      },
+      "8d7e30": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493772,
+        "hash": "e17a2629",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      },
+      "aa5e74": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493805,
+        "hash": "783f68cb",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      }
+    },
+    "l": {
+      "36": {
+        "chunkId": "63632b",
+        "hash": "d7978ee2",
+        "encoded": "def%20process_tool_results(self,%20tool_results:%20List%5BAny%5D):",
+        "prevChunkIds": []
+      },
+      "37": {
+        "chunkId": "63632b",
+        "hash": "f9104dde",
+        "encoded": "%22%22%22Process%20tool%20results%20and%20categorize%20them.%22%22%22",
+        "prevChunkIds": []
+      },
+      "38": {
+        "chunkId": "63632b",
+        "hash": "ccec223c",
+        "encoded": "#%20Keep%20track%20of%20which%20resource%20type%20we're%20expecting%20based%20on%20order",
+        "prevChunkIds": []
+      },
+      "39": {
+        "chunkId": "63632b",
+        "hash": "82f7d893",
+        "encoded": "resource_order%20=%20%5B",
+        "prevChunkIds": []
+      },
+      "40": {
+        "chunkId": "63632b",
+        "hash": "1885c1fe",
+        "encoded": "%22namespaces%22,",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "63632b",
+        "hash": "54ef1d51",
+        "encoded": "%22istio_pods%22,",
+        "prevChunkIds": []
+      },
+      "42": {
+        "chunkId": "63632b",
+        "hash": "e814c146",
+        "encoded": "%22daemonsets%22,",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "63632b",
+        "hash": "1b91f5f5",
+        "encoded": "%22peer_authentications%22,",
+        "prevChunkIds": []
+      },
+      "44": {
+        "chunkId": "63632b",
+        "hash": "c5f056eb",
+        "encoded": "%22authorization_policies%22,",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "63632b",
+        "hash": "f296f382",
+        "encoded": "%22network_policies%22",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "63632b",
+        "hash": "eed87b26",
+        "encoded": "%5D",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "63632b",
+        "hash": "40cc4184",
+        "encoded": "#%20Process%20each%20result%20in%20order",
+        "prevChunkIds": []
+      },
+      "49": {
+        "chunkId": "63632b",
+        "hash": "14a4830f",
+        "encoded": "for%20idx,%20result%20in%20enumerate(tool_results):",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "63632b",
+        "hash": "88bbd233",
+        "encoded": "if%20isinstance(result,%20dict)%20and%20%22output%22%20in%20result:",
+        "prevChunkIds": []
+      },
+      "51": {
+        "chunkId": "63632b",
+        "hash": "25230ae7",
+        "encoded": "output%20=%20result%5B%22output%22%5D",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "63632b",
+        "hash": "0e512576",
+        "encoded": "parsed%20=%20self.parse_kubectl_output(output)",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "63632b",
+        "hash": "361addc4",
+        "encoded": "items%20=%20parsed.get(%22items%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "55": {
+        "chunkId": "63632b",
+        "hash": "1f4bcfce",
+        "encoded": "#%20Categorize%20based%20on%20the%20actual%20content%20of%20items",
+        "prevChunkIds": []
+      },
+      "56": {
+        "chunkId": "63632b",
+        "hash": "30265213",
+        "encoded": "if%20items:",
+        "prevChunkIds": []
+      },
+      "57": {
+        "chunkId": "63632b",
+        "hash": "58ed2040",
+        "encoded": "#%20Check%20first%20item%20to%20determine%20type",
+        "prevChunkIds": []
+      },
+      "58": {
+        "chunkId": "63632b",
+        "hash": "3b9b7284",
+        "encoded": "first_item%20=%20items%5B0%5D",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "63632b",
+        "hash": "15d04fcd",
+        "encoded": "kind%20=%20first_item.get(%22kind%22,%20%22%22).lower()",
+        "prevChunkIds": []
+      },
+      "60": {
+        "chunkId": "63632b",
+        "hash": "7e541f80",
+        "encoded": "metadata%20=%20first_item.get(%22metadata%22,%20%7B%7D)",
+        "prevChunkIds": []
+      },
+      "62": {
+        "chunkId": "63632b",
+        "hash": "92fd4892",
+        "encoded": "#%20Categorize%20by%20kind%20and%20metadata",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "63632b",
+        "hash": "4ab31b28",
+        "encoded": "if%20kind%20==%20%22namespace%22:",
+        "prevChunkIds": []
+      },
+      "64": {
+        "chunkId": "63632b",
+        "hash": "1dab4dd2",
+        "encoded": "self.resources%5B%22namespaces%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "65": {
+        "chunkId": "63632b",
+        "hash": "abf533de",
+        "encoded": "elif%20kind%20==%20%22pod%22%20and%20metadata.get(%22namespace%22)%20==%20%22istio-system%22:",
+        "prevChunkIds": []
+      },
+      "66": {
+        "chunkId": "63632b",
+        "hash": "9c363acf",
+        "encoded": "self.resources%5B%22istio_pods%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "67": {
+        "chunkId": "63632b",
+        "hash": "c1f69e01",
+        "encoded": "elif%20kind%20==%20%22daemonset%22:",
+        "prevChunkIds": []
+      },
+      "68": {
+        "chunkId": "63632b",
+        "hash": "a2eb9d43",
+        "encoded": "self.resources%5B%22daemonsets%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "69": {
+        "chunkId": "63632b",
+        "hash": "ec784e09",
+        "encoded": "elif%20kind%20==%20%22peerauthentication%22:",
+        "prevChunkIds": []
+      },
+      "70": {
+        "chunkId": "63632b",
+        "hash": "e49b88cd",
+        "encoded": "self.resources%5B%22peer_authentications%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "71": {
+        "chunkId": "63632b",
+        "hash": "03d89ef9",
+        "encoded": "elif%20kind%20==%20%22authorizationpolicy%22:",
+        "prevChunkIds": []
+      },
+      "72": {
+        "chunkId": "63632b",
+        "hash": "31ab96c5",
+        "encoded": "self.resources%5B%22authorization_policies%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "63632b",
+        "hash": "97af74f3",
+        "encoded": "elif%20kind%20==%20%22networkpolicy%22:",
+        "prevChunkIds": []
+      },
+      "74": {
+        "chunkId": "63632b",
+        "hash": "7ac4590d",
+        "encoded": "self.resources%5B%22network_policies%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "63632b",
+        "hash": "1c512191",
+        "encoded": "else:",
+        "prevChunkIds": []
+      },
+      "76": {
+        "chunkId": "63632b",
+        "hash": "f501617e",
+        "encoded": "#%20Fallback:%20use%20position-based%20assignment%20if%20we%20can't%20determine%20from%20content",
+        "prevChunkIds": []
+      },
+      "77": {
+        "chunkId": "63632b",
+        "hash": "d59b9777",
+        "encoded": "if%20idx%20%3C%20len(resource_order):",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "63632b",
+        "hash": "9ce1c9b4",
+        "encoded": "resource_key%20=%20resource_order%5Bidx%5D",
+        "prevChunkIds": []
+      },
+      "79": {
+        "chunkId": "63632b",
+        "hash": "f9a4b942",
+        "encoded": "#%20Special%20handling%20for%20daemonsets%20from%20the%20user's%20data",
+        "prevChunkIds": []
+      },
+      "80": {
+        "chunkId": "63632b",
+        "hash": "1237e710",
+        "encoded": "if%20%22ztunnel%22%20in%20str(items):",
+        "prevChunkIds": []
+      },
+      "81": {
+        "chunkId": "63632b",
+        "hash": "7c2735ac",
+        "encoded": "self.resources%5B%22daemonsets%22%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "63632b",
+        "hash": "01cf06ee",
+        "encoded": "else:",
+        "prevChunkIds": []
+      },
+      "83": {
+        "chunkId": "63632b",
+        "hash": "16713b86",
+        "encoded": "self.resources%5Bresource_key%5D%20=%20items",
+        "prevChunkIds": []
+      },
+      "85": {
+        "chunkId": "8d7e30",
+        "hash": "4a35b0ee",
+        "encoded": "def%20check_istio_installed(self)%20-%3E%20Tuple%5Bstr,%20str%5D:",
+        "prevChunkIds": []
+      },
+      "86": {
+        "chunkId": "8d7e30",
+        "hash": "94b76325",
+        "encoded": "%22%22%22Check%20if%20Istio%20is%20installed.%22%22%22",
+        "prevChunkIds": []
+      },
+      "87": {
+        "chunkId": "8d7e30",
+        "hash": "27fdb3cf",
+        "encoded": "#%20Check%20for%20istiod%20pods",
+        "prevChunkIds": []
+      },
+      "88": {
+        "chunkId": "8d7e30",
+        "hash": "62068770",
+        "encoded": "istio_pods%20=%20self.resources.get(%22istio_pods%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "89": {
+        "chunkId": "8d7e30",
+        "hash": "e12841ca",
+        "encoded": "istiod_pods%20=%20%5Bp%20for%20p%20in%20istio_pods%20if%20%22istiod%22%20in%20p.get(%22metadata%22,%20%7B%7D).get(%22name%22,%20%22%22)%5D",
+        "prevChunkIds": []
+      },
+      "91": {
+        "chunkId": "8d7e30",
+        "hash": "ce937bfd",
+        "encoded": "#%20Also%20check%20for%20ztunnel%20daemonsets%20(Ambient%20mode)",
+        "prevChunkIds": []
+      },
+      "92": {
+        "chunkId": "8d7e30",
+        "hash": "d3351de8",
+        "encoded": "daemonsets%20=%20self.resources.get(%22daemonsets%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "93": {
+        "chunkId": "8d7e30",
+        "hash": "9f976990",
+        "encoded": "ztunnel_ds%20=%20%5Bds%20for%20ds%20in%20daemonsets%20if%20%22ztunnel%22%20in%20str(ds).lower()%5D",
+        "prevChunkIds": []
+      },
+      "95": {
+        "chunkId": "8d7e30",
+        "hash": "b31fca47",
+        "encoded": "if%20istiod_pods:",
+        "prevChunkIds": []
+      },
+      "96": {
+        "chunkId": "8d7e30",
+        "hash": "9e0ed289",
+        "encoded": "return%20%22Yes%22,%20f%22Found%20%7Blen(istiod_pods)%7D%20istiod%20pod(s)%22",
+        "prevChunkIds": []
+      },
+      "97": {
+        "chunkId": "8d7e30",
+        "hash": "6e4bb377",
+        "encoded": "elif%20ztunnel_ds:",
+        "prevChunkIds": []
+      },
+      "98": {
+        "chunkId": "8d7e30",
+        "hash": "a22f8e80",
+        "encoded": "return%20%22Yes%22,%20%22Found%20ztunnel%20daemonset%20(Ambient%20mode)%22",
+        "prevChunkIds": []
+      },
+      "99": {
+        "chunkId": "8d7e30",
+        "hash": "0bcb3dd8",
+        "encoded": "return%20%22No%22,%20%22No%20Istio%20components%20found%22",
+        "prevChunkIds": []
+      },
+      "101": {
+        "chunkId": "aa5e74",
+        "hash": "869080fc",
+        "encoded": "def%20check_istio_mode(self)%20-%3E%20Tuple%5Bstr,%20str%5D:",
+        "prevChunkIds": []
+      },
+      "102": {
+        "chunkId": "aa5e74",
+        "hash": "8b859fa8",
+        "encoded": "%22%22%22Check%20Istio%20mode%20(ambient%20vs%20sidecar).%22%22%22",
+        "prevChunkIds": []
+      },
+      "103": {
+        "chunkId": "aa5e74",
+        "hash": "078a6a43",
+        "encoded": "daemonsets%20=%20self.resources.get(%22daemonsets%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "105": {
+        "chunkId": "aa5e74",
+        "hash": "801c8f93",
+        "encoded": "#%20Check%20for%20ztunnel%20in%20the%20entire%20daemonset%20data",
+        "prevChunkIds": []
+      },
+      "106": {
+        "chunkId": "aa5e74",
+        "hash": "8b9b7942",
+        "encoded": "ztunnel_found%20=%20False",
+        "prevChunkIds": []
+      },
+      "107": {
+        "chunkId": "aa5e74",
+        "hash": "5374b05c",
+        "encoded": "for%20ds%20in%20daemonsets:",
+        "prevChunkIds": []
+      },
+      "108": {
+        "chunkId": "aa5e74",
+        "hash": "4dc95c9d",
+        "encoded": "#%20Check%20in%20various%20places%20where%20ztunnel%20might%20appear",
+        "prevChunkIds": []
+      },
+      "109": {
+        "chunkId": "aa5e74",
+        "hash": "217ea9ba",
+        "encoded": "if%20isinstance(ds,%20dict):",
+        "prevChunkIds": []
+      },
+      "110": {
+        "chunkId": "aa5e74",
+        "hash": "2e8f566b",
+        "encoded": "#%20Check%20metadata%20name",
+        "prevChunkIds": []
+      },
+      "111": {
+        "chunkId": "aa5e74",
+        "hash": "9c0b78c6",
+        "encoded": "if%20%22ztunnel%22%20in%20ds.get(%22metadata%22,%20%7B%7D).get(%22name%22,%20%22%22).lower():",
+        "prevChunkIds": []
+      },
+      "112": {
+        "chunkId": "aa5e74",
+        "hash": "e0e605e0",
+        "encoded": "ztunnel_found%20=%20True",
+        "prevChunkIds": []
+      },
+      "113": {
+        "chunkId": "aa5e74",
+        "hash": "b9a806dc",
+        "encoded": "break",
+        "prevChunkIds": []
+      },
+      "114": {
+        "chunkId": "aa5e74",
+        "hash": "fd688165",
+        "encoded": "#%20Check%20spec%20template",
+        "prevChunkIds": []
+      },
+      "115": {
+        "chunkId": "aa5e74",
+        "hash": "9d4663d9",
+        "encoded": "if%20%22ztunnel%22%20in%20str(ds.get(%22spec%22,%20%7B%7D)).lower():",
+        "prevChunkIds": []
+      },
+      "116": {
+        "chunkId": "aa5e74",
+        "hash": "42aac7ab",
+        "encoded": "ztunnel_found%20=%20True",
+        "prevChunkIds": []
+      },
+      "117": {
+        "chunkId": "aa5e74",
+        "hash": "87645ce4",
+        "encoded": "break",
+        "prevChunkIds": []
+      },
+      "118": {
+        "chunkId": "aa5e74",
+        "hash": "57e3cd99",
+        "encoded": "#%20Also%20check%20string%20representation",
+        "prevChunkIds": []
+      },
+      "119": {
+        "chunkId": "aa5e74",
+        "hash": "2b349b77",
+        "encoded": "elif%20%22ztunnel%22%20in%20str(ds).lower():",
+        "prevChunkIds": []
+      },
+      "120": {
+        "chunkId": "aa5e74",
+        "hash": "043b7e10",
+        "encoded": "ztunnel_found%20=%20True",
+        "prevChunkIds": []
+      },
+      "121": {
+        "chunkId": "aa5e74",
+        "hash": "663a22bd",
+        "encoded": "break",
+        "prevChunkIds": []
+      },
+      "123": {
+        "chunkId": "aa5e74",
+        "hash": "2da41882",
+        "encoded": "if%20ztunnel_found:",
+        "prevChunkIds": []
+      },
+      "124": {
+        "chunkId": "aa5e74",
+        "hash": "70351be3",
+        "encoded": "return%20%22Ambient%22,%20%22ztunnel%20daemonset%20found%20(Ambient%20mode)%22",
+        "prevChunkIds": []
+      },
+      "126": {
+        "chunkId": "aa5e74",
+        "hash": "f245380f",
+        "encoded": "#%20Check%20for%20sidecar%20injector",
+        "prevChunkIds": []
+      },
+      "127": {
+        "chunkId": "aa5e74",
+        "hash": "e70629e7",
+        "encoded": "istio_pods%20=%20self.resources.get(%22istio_pods%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "128": {
+        "chunkId": "aa5e74",
+        "hash": "2c34c4f9",
+        "encoded": "injector%20=%20%5Bp%20for%20p%20in%20istio_pods%20if%20%22sidecar-injector%22%20in%20p.get(%22metadata%22,%20%7B%7D).get(%22name%22,%20%22%22)%5D",
+        "prevChunkIds": []
+      },
+      "130": {
+        "chunkId": "aa5e74",
+        "hash": "bb676cd4",
+        "encoded": "if%20injector:",
+        "prevChunkIds": []
+      },
+      "131": {
+        "chunkId": "aa5e74",
+        "hash": "48022903",
+        "encoded": "return%20%22Sidecar%22,%20%22istio-sidecar-injector%20found%22",
+        "prevChunkIds": []
+      },
+      "133": {
+        "chunkId": "aa5e74",
+        "hash": "c549fac0",
+        "encoded": "return%20%22None/Default%22,%20%22No%20specific%20Istio%20mode%20detected%22",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

@@ -1,0 +1,688 @@
+{
+  "src/langgraphagenticai/utils/zero_trust_analyzer.py": {
+    "f": "zero_trust_analyzer.py",
+    "p": "src/langgraphagenticai/utils/zero_trust_analyzer.py",
+    "v": "v1",
+    "c": {
+      "23a7ec": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493107,
+        "hash": "44fd38b6",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "l": {
+      "0": {
+        "chunkId": "23a7ec",
+        "hash": "6f9188a7",
+        "encoded": "%22%22%22Zero%20Trust%20Analysis%20Module%20for%20processing%20kubectl%20outputs%20and%20generating%20assessment%20tables.%22%22%22",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "23a7ec",
+        "hash": "3780bef4",
+        "encoded": "import%20json",
+        "prevChunkIds": []
+      },
+      "3": {
+        "chunkId": "23a7ec",
+        "hash": "9c51f44f",
+        "encoded": "import%20yaml",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "23a7ec",
+        "hash": "fbae78d0",
+        "encoded": "from%20typing%20import%20Dict,%20List,%20Any,%20Tuple",
+        "prevChunkIds": []
+      },
+      "5": {
+        "chunkId": "23a7ec",
+        "hash": "bd76e06f",
+        "encoded": "from%20tabulate%20import%20tabulate",
+        "prevChunkIds": []
+      },
+      "8": {
+        "chunkId": "23a7ec",
+        "hash": "e175d681",
+        "encoded": "class%20ZeroTrustAnalyzer:",
+        "prevChunkIds": []
+      },
+      "9": {
+        "chunkId": "23a7ec",
+        "hash": "9fa5237e",
+        "encoded": "%22%22%22Analyzes%20Kubernetes%20resources%20for%20Zero%20Trust%20compliance.%22%22%22",
+        "prevChunkIds": []
+      },
+      "11": {
+        "chunkId": "23a7ec",
+        "hash": "0a9be555",
+        "encoded": "def%20__init__(self):",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "23a7ec",
+        "hash": "4ae42777",
+        "encoded": "self.resources%20=%20%7B",
+        "prevChunkIds": []
+      },
+      "13": {
+        "chunkId": "23a7ec",
+        "hash": "c0abefdf",
+        "encoded": "%22namespaces%22:%20%5B%5D,",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "23a7ec",
+        "hash": "1ec6b4f8",
+        "encoded": "%22istio_pods%22:%20%5B%5D,",
+        "prevChunkIds": []
+      },
+      "15": {
+        "chunkId": "23a7ec",
+        "hash": "70968a20",
+        "encoded": "%22daemonsets%22:%20%5B%5D,",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "23a7ec",
+        "hash": "7c5d6bd6",
+        "encoded": "%22peer_authentications%22:%20%5B%5D,",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "23a7ec",
+        "hash": "54cfc61f",
+        "encoded": "%22authorization_policies%22:%20%5B%5D,",
+        "prevChunkIds": []
+      },
+      "18": {
+        "chunkId": "23a7ec",
+        "hash": "33b3e406",
+        "encoded": "%22network_policies%22:%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "19": {
+        "chunkId": "23a7ec",
+        "hash": "ee39c532",
+        "encoded": "%7D",
+        "prevChunkIds": []
+      },
+      "20": {
+        "chunkId": "23a7ec",
+        "hash": "76b296fa",
+        "encoded": "self.assessment_results%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "23": {
+        "chunkId": "23a7ec",
+        "hash": "3b5b4aa3",
+        "encoded": "%22%22%22Parse%20kubectl%20output%20from%20YAML/JSON%20format.%22%22%22",
+        "prevChunkIds": []
+      },
+      "24": {
+        "chunkId": "23a7ec",
+        "hash": "6efdd2ff",
+        "encoded": "try:",
+        "prevChunkIds": []
+      },
+      "25": {
+        "chunkId": "23a7ec",
+        "hash": "8bf25f96",
+        "encoded": "#%20Try%20parsing%20as%20YAML%20first%20(kubectl%20default)",
+        "prevChunkIds": []
+      },
+      "26": {
+        "chunkId": "23a7ec",
+        "hash": "a8b5993c",
+        "encoded": "data%20=%20yaml.safe_load(output)",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "23a7ec",
+        "hash": "8ba27ca6",
+        "encoded": "return%20data",
+        "prevChunkIds": []
+      },
+      "28": {
+        "chunkId": "23a7ec",
+        "hash": "670de3d2",
+        "encoded": "except:",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "23a7ec",
+        "hash": "350de884",
+        "encoded": "try:",
+        "prevChunkIds": []
+      },
+      "30": {
+        "chunkId": "23a7ec",
+        "hash": "8d97321c",
+        "encoded": "#%20Fallback%20to%20JSON",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "23a7ec",
+        "hash": "3ea53598",
+        "encoded": "data%20=%20json.loads(output)",
+        "prevChunkIds": []
+      },
+      "32": {
+        "chunkId": "23a7ec",
+        "hash": "10efb2bb",
+        "encoded": "return%20data",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "23a7ec",
+        "hash": "692e2307",
+        "encoded": "except:",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "23a7ec",
+        "hash": "d77e7f2d",
+        "encoded": "return%20%7B%22items%22:%20%5B%5D%7D",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "23a7ec",
+        "hash": "d9544943",
+        "encoded": "def%20process_tool_results(self,%20tool_results:%20List%5BAny%5D):",
+        "prevChunkIds": []
+      },
+      "92": {
+        "chunkId": "23a7ec",
+        "hash": "f9eb9301",
+        "encoded": "%5D",
+        "prevChunkIds": []
+      },
+      "97": {
+        "chunkId": "23a7ec",
+        "hash": "cf16b261",
+        "encoded": "output%20=%20result%5B%22output%22%5D",
+        "prevChunkIds": []
+      },
+      "98": {
+        "chunkId": "23a7ec",
+        "hash": "2b0fe1c4",
+        "encoded": "parsed%20=%20self.parse_kubectl_output(output)",
+        "prevChunkIds": []
+      },
+      "188": {
+        "chunkId": "23a7ec",
+        "hash": "f5ad1199",
+        "encoded": "istio_pods%20=%20self.resources.get(%22istio_pods%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "193": {
+        "chunkId": "23a7ec",
+        "hash": "e4a65dd8",
+        "encoded": "namespaces%20=%20self.resources.get(%22namespaces%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "198": {
+        "chunkId": "23a7ec",
+        "hash": "2bc85be5",
+        "encoded": "daemonsets%20=%20self.resources.get(%22daemonsets%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "209": {
+        "chunkId": "23a7ec",
+        "hash": "fdd0331c",
+        "encoded": "if%20istiod_pods:",
+        "prevChunkIds": []
+      },
+      "258": {
+        "chunkId": "23a7ec",
+        "hash": "55995754",
+        "encoded": "return%20%22Ambient%22,%20%22ztunnel%20daemonset%20found%20(Ambient%20mode)%22",
+        "prevChunkIds": []
+      },
+      "261": {
+        "chunkId": "23a7ec",
+        "hash": "2abbda21",
+        "encoded": "istio_pods%20=%20self.resources.get(%22istio_pods%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "270": {
+        "chunkId": "23a7ec",
+        "hash": "396d544e",
+        "encoded": "injector%20=%20%5Bp%20for%20p%20in%20istio_pods%20if%20%22sidecar-injector%22%20in%20p.get(%22metadata%22,%20%7B%7D).get(%22name%22,%20%22%22)%5D",
+        "prevChunkIds": []
+      },
+      "271": {
+        "chunkId": "23a7ec",
+        "hash": "60b59512",
+        "encoded": "if%20injector:",
+        "prevChunkIds": []
+      },
+      "272": {
+        "chunkId": "23a7ec",
+        "hash": "6a6148a1",
+        "encoded": "return%20%22Sidecar%22,%20%22istio-sidecar-injector%20found%22",
+        "prevChunkIds": []
+      },
+      "274": {
+        "chunkId": "23a7ec",
+        "hash": "325e1f4f",
+        "encoded": "return%20%22None/Default%22,%20%22No%20specific%20Istio%20mode%20detected%22",
+        "prevChunkIds": []
+      },
+      "276": {
+        "chunkId": "23a7ec",
+        "hash": "4f7894ea",
+        "encoded": "%22%22%22Check%20for%20strict%20mTLS%20enforcement.%22%22%22",
+        "prevChunkIds": []
+      },
+      "277": {
+        "chunkId": "23a7ec",
+        "hash": "c22fe055",
+        "encoded": "peer_auths%20=%20self.resources.get(%22peer_authentications%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "278": {
+        "chunkId": "23a7ec",
+        "hash": "27c865dc",
+        "encoded": "strict_mtls%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "280": {
+        "chunkId": "23a7ec",
+        "hash": "d3cad424",
+        "encoded": "for%20pa%20in%20peer_auths:",
+        "prevChunkIds": []
+      },
+      "281": {
+        "chunkId": "23a7ec",
+        "hash": "0071ad86",
+        "encoded": "spec%20=%20pa.get(%22spec%22,%20%7B%7D)",
+        "prevChunkIds": []
+      },
+      "282": {
+        "chunkId": "23a7ec",
+        "hash": "b2497efb",
+        "encoded": "if%20spec.get(%22mtls%22,%20%7B%7D).get(%22mode%22)%20==%20%22STRICT%22:",
+        "prevChunkIds": []
+      },
+      "283": {
+        "chunkId": "23a7ec",
+        "hash": "31481c21",
+        "encoded": "ns%20=%20pa.get(%22metadata%22,%20%7B%7D).get(%22namespace%22,%20%22cluster-wide%22)",
+        "prevChunkIds": []
+      },
+      "284": {
+        "chunkId": "23a7ec",
+        "hash": "d2af441d",
+        "encoded": "strict_mtls.append(ns)",
+        "prevChunkIds": []
+      },
+      "286": {
+        "chunkId": "23a7ec",
+        "hash": "9c76002a",
+        "encoded": "if%20strict_mtls:",
+        "prevChunkIds": []
+      },
+      "287": {
+        "chunkId": "23a7ec",
+        "hash": "63b37c5f",
+        "encoded": "return%20%22Yes%22,%20f%22Strict%20mTLS%20in:%20%7B',%20'.join(strict_mtls)%7D%22",
+        "prevChunkIds": []
+      },
+      "288": {
+        "chunkId": "23a7ec",
+        "hash": "7b25c605",
+        "encoded": "return%20%22No%22,%20%22No%20strict%20mTLS%20PeerAuthentication%20found%22",
+        "prevChunkIds": []
+      },
+      "291": {
+        "chunkId": "23a7ec",
+        "hash": "5af73bcb",
+        "encoded": "%22%22%22Check%20for%20default-deny%20AuthorizationPolicy.%22%22%22",
+        "prevChunkIds": []
+      },
+      "292": {
+        "chunkId": "23a7ec",
+        "hash": "1d626bfe",
+        "encoded": "authz_policies%20=%20self.resources.get(%22authorization_policies%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "293": {
+        "chunkId": "23a7ec",
+        "hash": "c43c4055",
+        "encoded": "deny_policies%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "295": {
+        "chunkId": "23a7ec",
+        "hash": "7caff754",
+        "encoded": "for%20ap%20in%20authz_policies:",
+        "prevChunkIds": []
+      },
+      "296": {
+        "chunkId": "23a7ec",
+        "hash": "4296416b",
+        "encoded": "spec%20=%20ap.get(%22spec%22,%20%7B%7D)",
+        "prevChunkIds": []
+      },
+      "297": {
+        "chunkId": "23a7ec",
+        "hash": "a977b20d",
+        "encoded": "if%20spec.get(%22action%22)%20==%20%22DENY%22:",
+        "prevChunkIds": []
+      },
+      "298": {
+        "chunkId": "23a7ec",
+        "hash": "accd7bd9",
+        "encoded": "ns%20=%20ap.get(%22metadata%22,%20%7B%7D).get(%22namespace%22,%20%22cluster-wide%22)",
+        "prevChunkIds": []
+      },
+      "299": {
+        "chunkId": "23a7ec",
+        "hash": "0cde5460",
+        "encoded": "deny_policies.append(ns)",
+        "prevChunkIds": []
+      },
+      "301": {
+        "chunkId": "23a7ec",
+        "hash": "3d6e7ee1",
+        "encoded": "if%20deny_policies:",
+        "prevChunkIds": []
+      },
+      "302": {
+        "chunkId": "23a7ec",
+        "hash": "aa4cbafe",
+        "encoded": "return%20%22Yes%22,%20f%22Default-deny%20in:%20%7B',%20'.join(deny_policies)%7D%22",
+        "prevChunkIds": []
+      },
+      "303": {
+        "chunkId": "23a7ec",
+        "hash": "b98ffe52",
+        "encoded": "return%20%22No%22,%20%22No%20default-deny%20AuthorizationPolicy%20found%22",
+        "prevChunkIds": []
+      },
+      "306": {
+        "chunkId": "23a7ec",
+        "hash": "63590e8a",
+        "encoded": "%22%22%22Check%20for%20allow-only%20AuthorizationPolicy.%22%22%22",
+        "prevChunkIds": []
+      },
+      "307": {
+        "chunkId": "23a7ec",
+        "hash": "dead538c",
+        "encoded": "authz_policies%20=%20self.resources.get(%22authorization_policies%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "308": {
+        "chunkId": "23a7ec",
+        "hash": "41f09ced",
+        "encoded": "allow_policies%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "310": {
+        "chunkId": "23a7ec",
+        "hash": "918c9676",
+        "encoded": "for%20ap%20in%20authz_policies:",
+        "prevChunkIds": []
+      },
+      "311": {
+        "chunkId": "23a7ec",
+        "hash": "127fa1fe",
+        "encoded": "spec%20=%20ap.get(%22spec%22,%20%7B%7D)",
+        "prevChunkIds": []
+      },
+      "312": {
+        "chunkId": "23a7ec",
+        "hash": "a00ad544",
+        "encoded": "if%20spec.get(%22action%22)%20==%20%22ALLOW%22:",
+        "prevChunkIds": []
+      },
+      "313": {
+        "chunkId": "23a7ec",
+        "hash": "9a41eeb7",
+        "encoded": "ns%20=%20ap.get(%22metadata%22,%20%7B%7D).get(%22namespace%22,%20%22cluster-wide%22)",
+        "prevChunkIds": []
+      },
+      "314": {
+        "chunkId": "23a7ec",
+        "hash": "51ef58b3",
+        "encoded": "allow_policies.append(ns)",
+        "prevChunkIds": []
+      },
+      "316": {
+        "chunkId": "23a7ec",
+        "hash": "61189692",
+        "encoded": "if%20allow_policies:",
+        "prevChunkIds": []
+      },
+      "317": {
+        "chunkId": "23a7ec",
+        "hash": "be97a569",
+        "encoded": "return%20%22Yes%22,%20f%22Allow%20policies%20in:%20%7B',%20'.join(allow_policies)%7D%22",
+        "prevChunkIds": []
+      },
+      "318": {
+        "chunkId": "23a7ec",
+        "hash": "39955514",
+        "encoded": "return%20%22No%22,%20%22No%20explicit%20ALLOW%20AuthorizationPolicy%20found%22",
+        "prevChunkIds": []
+      },
+      "321": {
+        "chunkId": "23a7ec",
+        "hash": "cb9fbb66",
+        "encoded": "%22%22%22Check%20for%20default-deny%20NetworkPolicy.%22%22%22",
+        "prevChunkIds": []
+      },
+      "322": {
+        "chunkId": "23a7ec",
+        "hash": "4f2ca34b",
+        "encoded": "net_policies%20=%20self.resources.get(%22network_policies%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "323": {
+        "chunkId": "23a7ec",
+        "hash": "b9616f8e",
+        "encoded": "deny_all%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "325": {
+        "chunkId": "23a7ec",
+        "hash": "31794d3d",
+        "encoded": "for%20np%20in%20net_policies:",
+        "prevChunkIds": []
+      },
+      "326": {
+        "chunkId": "23a7ec",
+        "hash": "4d8564f6",
+        "encoded": "spec%20=%20np.get(%22spec%22,%20%7B%7D)",
+        "prevChunkIds": []
+      },
+      "327": {
+        "chunkId": "23a7ec",
+        "hash": "af39f0ed",
+        "encoded": "#%20Check%20if%20it's%20a%20deny-all%20policy%20(empty%20ingress/egress)",
+        "prevChunkIds": []
+      },
+      "328": {
+        "chunkId": "23a7ec",
+        "hash": "04199657",
+        "encoded": "if%20not%20spec.get(%22ingress%22)%20or%20not%20spec.get(%22egress%22):",
+        "prevChunkIds": []
+      },
+      "329": {
+        "chunkId": "23a7ec",
+        "hash": "7ba38181",
+        "encoded": "ns%20=%20np.get(%22metadata%22,%20%7B%7D).get(%22namespace%22,%20%22%22)",
+        "prevChunkIds": []
+      },
+      "331": {
+        "chunkId": "23a7ec",
+        "hash": "a42032f7",
+        "encoded": "deny_all.append(ns)",
+        "prevChunkIds": []
+      },
+      "333": {
+        "chunkId": "23a7ec",
+        "hash": "de4c8e6d",
+        "encoded": "if%20deny_all:",
+        "prevChunkIds": []
+      },
+      "335": {
+        "chunkId": "23a7ec",
+        "hash": "614d646a",
+        "encoded": "return%20%22No%22,%20%22No%20default-deny%20NetworkPolicy%20found%22",
+        "prevChunkIds": []
+      },
+      "338": {
+        "chunkId": "23a7ec",
+        "hash": "b399b816",
+        "encoded": "%22%22%22Check%20NetworkPolicy%20coverage%20across%20namespaces.%22%22%22",
+        "prevChunkIds": []
+      },
+      "340": {
+        "chunkId": "23a7ec",
+        "hash": "48ef5427",
+        "encoded": "net_policies%20=%20self.resources.get(%22network_policies%22,%20%5B%5D)",
+        "prevChunkIds": []
+      },
+      "353": {
+        "chunkId": "23a7ec",
+        "hash": "bc6368e4",
+        "encoded": "return%20%22Yes%22,%20f%22%7Blen(np_namespaces)%7D/%7Blen(ns_names)%7D%20namespaces%20have%20NetworkPolicies%20(%7Bcoverage:.0f%7D%25)%22",
+        "prevChunkIds": []
+      },
+      "355": {
+        "chunkId": "23a7ec",
+        "hash": "e5cf3ae1",
+        "encoded": "return%20%22Partial%22,%20f%22%7Blen(np_namespaces)%7D/%7Blen(ns_names)%7D%20namespaces%20have%20NetworkPolicies%20(%7Bcoverage:.0f%7D%25)%22",
+        "prevChunkIds": []
+      },
+      "356": {
+        "chunkId": "23a7ec",
+        "hash": "ef1e87ee",
+        "encoded": "return%20%22No%22,%20%22No%20NetworkPolicies%20found%20in%20any%20namespace%22",
+        "prevChunkIds": []
+      },
+      "401": {
+        "chunkId": "23a7ec",
+        "hash": "d86e13aa",
+        "encoded": "#%20Run%20all%20checks",
+        "prevChunkIds": []
+      },
+      "402": {
+        "chunkId": "23a7ec",
+        "hash": "caba7589",
+        "encoded": "checks%20=%20%5B",
+        "prevChunkIds": []
+      },
+      "403": {
+        "chunkId": "23a7ec",
+        "hash": "97b32319",
+        "encoded": "(%22Istio%20installed%22,%20self.check_istio_installed()),",
+        "prevChunkIds": []
+      },
+      "404": {
+        "chunkId": "23a7ec",
+        "hash": "5559f766",
+        "encoded": "(%22Istio%20mode/profile%22,%20self.check_istio_mode()),",
+        "prevChunkIds": []
+      },
+      "405": {
+        "chunkId": "23a7ec",
+        "hash": "f61f1249",
+        "encoded": "(%22Strict%20mTLS%20enforced%22,%20self.check_strict_mtls()),",
+        "prevChunkIds": []
+      },
+      "406": {
+        "chunkId": "23a7ec",
+        "hash": "71b8fd06",
+        "encoded": "(%22Default-deny%20AuthorizationPolicy%22,%20self.check_default_deny_authz()),",
+        "prevChunkIds": []
+      },
+      "407": {
+        "chunkId": "23a7ec",
+        "hash": "84091c29",
+        "encoded": "(%22Allow-only%20AuthorizationPolicy%20defined%22,%20self.check_allow_authz()),",
+        "prevChunkIds": []
+      },
+      "408": {
+        "chunkId": "23a7ec",
+        "hash": "8ea0fb1c",
+        "encoded": "(%22Kubernetes%20NetworkPolicy%20default-deny%20exists%22,%20self.check_network_policy_deny()),",
+        "prevChunkIds": []
+      },
+      "409": {
+        "chunkId": "23a7ec",
+        "hash": "fdc7047a",
+        "encoded": "(%22NetworkPolicies%20present%20in%20all%20namespaces%22,%20self.check_network_policies_coverage())",
+        "prevChunkIds": []
+      },
+      "412": {
+        "chunkId": "23a7ec",
+        "hash": "82cc7474",
+        "encoded": "#%20Format%20results",
+        "prevChunkIds": []
+      },
+      "413": {
+        "chunkId": "23a7ec",
+        "hash": "0b6d37df",
+        "encoded": "table_data%20=%20%5B%5D",
+        "prevChunkIds": []
+      },
+      "414": {
+        "chunkId": "23a7ec",
+        "hash": "59b2be15",
+        "encoded": "for%20check_name,%20(status,%20details)%20in%20checks:",
+        "prevChunkIds": []
+      },
+      "415": {
+        "chunkId": "23a7ec",
+        "hash": "7df942aa",
+        "encoded": "table_data.append(%5Bcheck_name,%20status,%20details%5D)",
+        "prevChunkIds": []
+      },
+      "417": {
+        "chunkId": "23a7ec",
+        "hash": "5d51be1f",
+        "encoded": "#%20Generate%20table",
+        "prevChunkIds": []
+      },
+      "418": {
+        "chunkId": "23a7ec",
+        "hash": "344da22a",
+        "encoded": "headers%20=%20%5B%22Check%20Description%22,%20%22Status%22,%20%22Details%22%5D",
+        "prevChunkIds": []
+      },
+      "419": {
+        "chunkId": "23a7ec",
+        "hash": "1efacd03",
+        "encoded": "table%20=%20tabulate(table_data,%20headers=headers,%20tablefmt=%22grid%22)",
+        "prevChunkIds": []
+      },
+      "428": {
+        "chunkId": "23a7ec",
+        "hash": "b7da96ae",
+        "encoded": "%22%22%22Main%20method%20to%20analyze%20tool%20results%20and%20generate%20report.%22%22%22",
+        "prevChunkIds": []
+      },
+      "429": {
+        "chunkId": "23a7ec",
+        "hash": "00db9917",
+        "encoded": "self.process_tool_results(tool_results)",
+        "prevChunkIds": []
+      },
+      "430": {
+        "chunkId": "23a7ec",
+        "hash": "9b326eb0",
+        "encoded": "return%20self.generate_assessment_table()",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

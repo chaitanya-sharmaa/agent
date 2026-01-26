@@ -1,0 +1,12 @@
+langchain
+langgraph
+langchain-community
+langchain-core
+langchain_groq
+langchain_openai
+faiss-cpu
+streamlit
+tavily-python
+langchain_mcp_adapters
+langchain_ollama
+tabulate

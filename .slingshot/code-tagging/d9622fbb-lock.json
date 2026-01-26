@@ -1,0 +1,286 @@
+{
+  "CHATBOT_NODE_FIX.md": {
+    "f": "CHATBOT_NODE_FIX.md",
+    "p": "CHATBOT_NODE_FIX.md",
+    "v": "v1",
+    "c": {
+      "5843f4": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493532,
+        "hash": "0808257a",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "l": {
+      "0": {
+        "chunkId": "5843f4",
+        "hash": "dc52ca8c",
+        "encoded": "#%20ChatbotWithToolNode%20Fix%20Summary",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "5843f4",
+        "hash": "be3deb53",
+        "encoded": "##%20Issue%20Fixed",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "5843f4",
+        "hash": "4e2a12eb",
+        "encoded": "**Error**:%20%60AttributeError:%20'ChatbotWithToolNode'%20object%20has%20no%20attribute%20'create_chatbot'%60",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "5843f4",
+        "hash": "248be4ae",
+        "encoded": "##%20Root%20Cause",
+        "prevChunkIds": []
+      },
+      "8": {
+        "chunkId": "5843f4",
+        "hash": "d2896009",
+        "encoded": "The%20%60ChatbotWithToolNode%60%20class%20was%20missing%20the%20%60create_chatbot%60%20method%20that%20was%20being%20called%20in%20%60graph_builder.py%60.%20The%20code%20for%20creating%20the%20chatbot%20node%20was%20present%20but%20not%20properly%20wrapped%20in%20a%20method.",
+        "prevChunkIds": []
+      },
+      "10": {
+        "chunkId": "5843f4",
+        "hash": "56e1c6a9",
+        "encoded": "##%20Solution%20Applied",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "5843f4",
+        "hash": "a82cab71",
+        "encoded": "I%20added%20the%20missing%20%60create_chatbot%60%20method%20to%20the%20%60ChatbotWithToolNode%60%20class:",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "5843f4",
+        "hash": "c8f81dbd",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "15": {
+        "chunkId": "5843f4",
+        "hash": "dafd971b",
+        "encoded": "def%20create_chatbot(self,%20tools):",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "5843f4",
+        "hash": "193ba429",
+        "encoded": "%22%22%22Create%20and%20return%20the%20chatbot%20node%20function%22%22%22",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "5843f4",
+        "hash": "90d2852f",
+        "encoded": "#%20Force%20tool%20usage%20when%20appropriate%20by%20using%20tool_choice=%22auto%22",
+        "prevChunkIds": []
+      },
+      "18": {
+        "chunkId": "5843f4",
+        "hash": "bef2519c",
+        "encoded": "#%20This%20ensures%20the%20model%20uses%20tools%20when%20they%20should%20be%20used",
+        "prevChunkIds": []
+      },
+      "19": {
+        "chunkId": "5843f4",
+        "hash": "e9a42721",
+        "encoded": "llm_with_tools%20=%20self.llm.bind_tools(tools)",
+        "prevChunkIds": []
+      },
+      "21": {
+        "chunkId": "5843f4",
+        "hash": "c9f0edcf",
+        "encoded": "def%20chatbot_node(state:%20State):",
+        "prevChunkIds": []
+      },
+      "22": {
+        "chunkId": "5843f4",
+        "hash": "0f5f2662",
+        "encoded": "#%20...%20rest%20of%20the%20chatbot%20logic%20...",
+        "prevChunkIds": []
+      },
+      "24": {
+        "chunkId": "5843f4",
+        "hash": "1a513017",
+        "encoded": "return%20chatbot_node",
+        "prevChunkIds": []
+      },
+      "25": {
+        "chunkId": "5843f4",
+        "hash": "7cae3a01",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "5843f4",
+        "hash": "e1d93a54",
+        "encoded": "##%20What%20This%20Method%20Does",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "5843f4",
+        "hash": "44b36521",
+        "encoded": "1.%20**Accepts%20tools%20parameter**:%20Takes%20the%20tools%20list%20from%20the%20graph%20builder",
+        "prevChunkIds": []
+      },
+      "30": {
+        "chunkId": "5843f4",
+        "hash": "31dc6b34",
+        "encoded": "2.%20**Binds%20tools%20to%20LLM**:%20Creates%20%60llm_with_tools%60%20by%20binding%20the%20tools%20to%20the%20model",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "5843f4",
+        "hash": "1f3e232e",
+        "encoded": "3.%20**Returns%20chatbot_node%20function**:%20Returns%20the%20inner%20%60chatbot_node%60%20function%20that:",
+        "prevChunkIds": []
+      },
+      "32": {
+        "chunkId": "5843f4",
+        "hash": "6393ff32",
+        "encoded": "-%20Manages%20system%20prompts",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "5843f4",
+        "hash": "d9a1d7a0",
+        "encoded": "-%20Detects%20Zero%20Trust%20audit%20requests",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "5843f4",
+        "hash": "63fa193b",
+        "encoded": "-%20Handles%20tool%20calls%20(including%20Ollama%20JSON%20parsing)",
+        "prevChunkIds": []
+      },
+      "35": {
+        "chunkId": "5843f4",
+        "hash": "7ed9ac0b",
+        "encoded": "-%20Generates%20Zero%20Trust%20assessment%20reports",
+        "prevChunkIds": []
+      },
+      "37": {
+        "chunkId": "5843f4",
+        "hash": "2761eff9",
+        "encoded": "##%20How%20to%20Run%20Now",
+        "prevChunkIds": []
+      },
+      "39": {
+        "chunkId": "5843f4",
+        "hash": "5a800592",
+        "encoded": "With%20this%20fix,%20you%20can%20now%20run%20the%20application:",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "5843f4",
+        "hash": "bf35539b",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "42": {
+        "chunkId": "5843f4",
+        "hash": "bca3a84b",
+        "encoded": "cd%20/Users/rohkumar46/chatbot-web",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "5843f4",
+        "hash": "d4906869",
+        "encoded": "python%20-m%20src.langgraphagenticai.main%20--no-ui",
+        "prevChunkIds": []
+      },
+      "44": {
+        "chunkId": "5843f4",
+        "hash": "32bfda31",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "5843f4",
+        "hash": "23858463",
+        "encoded": "When%20prompted,%20enter:%20%60Zero%20Trust%20Auditor%60",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "5843f4",
+        "hash": "98ef6bd8",
+        "encoded": "##%20Expected%20Behavior",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "5843f4",
+        "hash": "ef18072a",
+        "encoded": "1.%20The%20application%20will%20start%20without%20AttributeError",
+        "prevChunkIds": []
+      },
+      "51": {
+        "chunkId": "5843f4",
+        "hash": "35a6bdaa",
+        "encoded": "2.%20The%20chatbot%20node%20will%20be%20properly%20created%20with%20tool%20support",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "5843f4",
+        "hash": "6858f6db",
+        "encoded": "3.%20Tool%20calls%20will%20be%20executed%20(kubectl_get)",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "5843f4",
+        "hash": "9bd0952b",
+        "encoded": "4.%20Zero%20Trust%20analysis%20will%20be%20performed%20on%20the%20results",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "5843f4",
+        "hash": "40907f1d",
+        "encoded": "5.%20A%20comprehensive%20assessment%20table%20will%20be%20displayed",
+        "prevChunkIds": []
+      },
+      "56": {
+        "chunkId": "5843f4",
+        "hash": "22e79508",
+        "encoded": "##%20Note%20on%20Dependencies",
+        "prevChunkIds": []
+      },
+      "58": {
+        "chunkId": "5843f4",
+        "hash": "07e6a58b",
+        "encoded": "Make%20sure%20%60tabulate%60%20is%20installed%20(it's%20already%20in%20requirements.txt):",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "5843f4",
+        "hash": "e3c4d607",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "60": {
+        "chunkId": "5843f4",
+        "hash": "67ea1323",
+        "encoded": "pip%20install%20tabulate",
+        "prevChunkIds": []
+      },
+      "61": {
+        "chunkId": "5843f4",
+        "hash": "0fba5d61",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "5843f4",
+        "hash": "9f95131e",
+        "encoded": "The%20fix%20maintains%20all%20the%20existing%20functionality%20while%20properly%20structuring%20the%20code%20according%20to%20the%20expected%20interface.",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

@@ -1,0 +1,105 @@
+# MCP Server Configuration
+# Configure your Model Context Protocol server endpoint and available tools
+
+server:
+  host: "localhost"
+  port: 3001
+  timeout_seconds: 30
+  retry_attempts: 3
+
+# List of available tools from your MCP server
+# These are the tools that the LLM can call
+tools:
+  - name: "kubectl_get"
+    description: "Get Kubernetes resources"
+    parameters:
+      - name: "resourceType"
+        type: "string"
+        required: true
+        description: "Type of resource (pods, services, deployments, etc.)"
+      - name: "namespace"
+        type: "string"
+        required: false
+        description: "Kubernetes namespace (optional for cluster-wide resources)"
+
+  - name: "kubectl_describe"
+    description: "Describe Kubernetes resources in detail"
+    parameters:
+      - name: "resourceType"
+        type: "string"
+        required: true
+      - name: "namespace"
+        type: "string"
+        required: false
+
+  - name: "kubectl_apply"
+    description: "Apply YAML configuration to cluster"
+    parameters:
+      - name: "yaml_content"
+        type: "string"
+        required: true
+        description: "Complete YAML resource definition"
+
+  - name: "kubectl_create"
+    description: "Create new Kubernetes resources"
+    parameters:
+      - name: "yaml_content"
+        type: "string"
+        required: true
+
+  - name: "kubectl_logs"
+    description: "Get pod logs"
+    parameters:
+      - name: "pod_name"
+        type: "string"
+        required: true
+      - name: "namespace"
+        type: "string"
+        required: false
+
+  - name: "kubectl_patch"
+    description: "Patch Kubernetes resources"
+    parameters:
+      - name: "resourceType"
+        type: "string"
+        required: true
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "namespace"
+        type: "string"
+        required: false
+
+  - name: "upgrade_helm_chart"
+    description: "Upgrade a Helm release"
+    parameters:
+      - name: "name"
+        type: "string"
+        required: true
+        description: "Release name"
+      - name: "chart"
+        type: "string"
+        required: true
+        description: "Chart URL or path"
+      - name: "namespace"
+        type: "string"
+        required: true
+
+  - name: "install_helm_chart"
+    description: "Install a new Helm chart"
+    parameters:
+      - name: "name"
+        type: "string"
+        required: true
+      - name: "chart"
+        type: "string"
+        required: true
+      - name: "namespace"
+        type: "string"
+        required: true
+
+  - name: "list_api_resources"
+    description: "List available Kubernetes API resources"
+
+  - name: "ping"
+    description: "Test MCP server connection"

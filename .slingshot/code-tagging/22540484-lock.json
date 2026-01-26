@@ -1,0 +1,238 @@
+{
+  "RUN_INSTRUCTIONS.md": {
+    "filename": "RUN_INSTRUCTIONS.md",
+    "path": "RUN_INSTRUCTIONS.md",
+    "version": "1.1",
+    "chunks": {
+      "485a3e": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766492121,
+        "hash": "341df04b",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "lines": {
+      "0": {
+        "chunkId": "485a3e",
+        "hash": "1eb1c1d1",
+        "encoded": "#%20How%20to%20Run%20LangGraph%20AgenticAI%20Application",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "485a3e",
+        "hash": "e0849dc0",
+        "encoded": "##%20Prerequisites",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "485a3e",
+        "hash": "271c0761",
+        "encoded": "1.%20**MCP%20Server**:%20Ensure%20the%20Kubernetes%20MCP%20server%20is%20running%20on%20%60http://localhost:3001/mcp%60",
+        "prevChunkIds": []
+      },
+      "5": {
+        "chunkId": "485a3e",
+        "hash": "6519b6c1",
+        "encoded": "2.%20**Ollama**:%20Make%20sure%20Ollama%20is%20installed%20and%20running%20with%20your%20desired%20model",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "485a3e",
+        "hash": "0c02272b",
+        "encoded": "3.%20**Python%20Environment**:%20Activate%20your%20virtual%20environment%20(if%20using%20one)",
+        "prevChunkIds": []
+      },
+      "8": {
+        "chunkId": "485a3e",
+        "hash": "b4150666",
+        "encoded": "##%20Running%20the%20Application",
+        "prevChunkIds": []
+      },
+      "10": {
+        "chunkId": "485a3e",
+        "hash": "149af79f",
+        "encoded": "###%20Command%20Line%20Interface%20(CLI)%20Mode",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "485a3e",
+        "hash": "e4d871af",
+        "encoded": "To%20run%20the%20application%20without%20the%20Streamlit%20UI,%20use%20the%20%60--no-ui%60%20flag:",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "485a3e",
+        "hash": "1e88bf58",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "15": {
+        "chunkId": "485a3e",
+        "hash": "77c5f0b5",
+        "encoded": "#%20From%20the%20project%20root%20directory",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "485a3e",
+        "hash": "9863455b",
+        "encoded": "python%20-m%20src.langgraphagenticai.main%20--no-ui",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "485a3e",
+        "hash": "0c3f91cc",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "21": {
+        "chunkId": "485a3e",
+        "hash": "66d9451d",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "485a3e",
+        "hash": "ebfd5a89",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "485a3e",
+        "hash": "4127cb90",
+        "encoded": "###%20Streamlit%20UI%20Mode",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "485a3e",
+        "hash": "396d9e33",
+        "encoded": "To%20run%20with%20the%20web%20interface:",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "485a3e",
+        "hash": "46ebfbf2",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "36": {
+        "chunkId": "485a3e",
+        "hash": "f164efe7",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "44": {
+        "chunkId": "485a3e",
+        "hash": "c25c0d33",
+        "encoded": "###%20Environment%20Setup",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "485a3e",
+        "hash": "5d552e97",
+        "encoded": "If%20you%20haven't%20set%20up%20the%20environment:",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "485a3e",
+        "hash": "be207973",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "49": {
+        "chunkId": "485a3e",
+        "hash": "c5c342e5",
+        "encoded": "#%20Install%20dependencies",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "485a3e",
+        "hash": "5d07f640",
+        "encoded": "pip%20install%20-r%20requirements.txt",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "485a3e",
+        "hash": "0a3ac12a",
+        "encoded": "#%20Or%20using%20uv%20(if%20you%20use%20it)",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "485a3e",
+        "hash": "233b9989",
+        "encoded": "uv%20pip%20install%20-r%20requirements.txt",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "485a3e",
+        "hash": "45b4a8d5",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "61": {
+        "chunkId": "485a3e",
+        "hash": "5cd96e91",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "62": {
+        "chunkId": "485a3e",
+        "hash": "bf9929bf",
+        "encoded": "curl%20http://localhost:3001/mcp",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "485a3e",
+        "hash": "666504fe",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "67": {
+        "chunkId": "485a3e",
+        "hash": "931cfa67",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "68": {
+        "chunkId": "485a3e",
+        "hash": "c9767702",
+        "encoded": "ollama%20list",
+        "prevChunkIds": []
+      },
+      "69": {
+        "chunkId": "485a3e",
+        "hash": "19eee76e",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "485a3e",
+        "hash": "34c5a2f0",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "485a3e",
+        "hash": "f95f11be",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "485a3e",
+        "hash": "3f7d0245",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "80": {
+        "chunkId": "485a3e",
+        "hash": "7c6962b8",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

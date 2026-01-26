@@ -1,0 +1,47 @@
+# Example: Docker Security Scanner Configuration
+# Copy this to config/mcp.yaml and customize
+
+server:
+  host: "localhost"
+  port: 5002
+  timeout_seconds: 60
+  retry_attempts: 3
+
+tools:
+  - name: "docker_list_images"
+    description: "List all Docker images"
+    
+  - name: "docker_list_containers"
+    description: "List running containers"
+    
+  - name: "docker_scan_image"
+    description: "Scan image for vulnerabilities"
+    parameters:
+      - name: "image_name"
+        type: "string"
+        required: true
+    
+  - name: "docker_get_vulnerabilities"
+    description: "Get vulnerability details"
+    parameters:
+      - name: "image_name"
+        type: "string"
+        required: true
+    
+  - name: "docker_check_base_image"
+    description: "Check base image for known issues"
+    
+  - name: "docker_analyze_layers"
+    description: "Analyze image layers"
+    
+  - name: "docker_check_permissions"
+    description: "Check container permissions and capabilities"
+    
+  - name: "docker_get_registry_info"
+    description: "Get image registry information"
+    
+  - name: "docker_check_signed_images"
+    description: "Verify image signatures"
+    
+  - name: "docker_get_compliance_status"
+    description: "Get compliance status of images"

@@ -1,0 +1,550 @@
+{
+  "GUI_CLEAN_DISPLAY_GUIDE.md": {
+    "f": "GUI_CLEAN_DISPLAY_GUIDE.md",
+    "p": "GUI_CLEAN_DISPLAY_GUIDE.md",
+    "v": "v1",
+    "c": {
+      "14738c": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766504872,
+        "hash": "17c49c3f",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "l": {
+      "0": {
+        "chunkId": "14738c",
+        "hash": "f187dc85",
+        "encoded": "#%20GUI%20Clean%20Display%20Guide%20-%20Zero%20Trust%20Auditor",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "14738c",
+        "hash": "fd53af0b",
+        "encoded": "##%20What%20Was%20Fixed",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "14738c",
+        "hash": "9edf1db0",
+        "encoded": "The%20Streamlit%20GUI%20has%20been%20updated%20to%20provide%20a%20cleaner,%20more%20focused%20display%20for%20the%20Zero%20Trust%20Auditor%20use%20case.%20The%20changes%20address%20two%20main%20issues:",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "14738c",
+        "hash": "211e5a39",
+        "encoded": "1.%20**Removed%20Raw%20Tool%20Outputs**:%20For%20Zero%20Trust%20Auditor,%20the%20GUI%20no%20longer%20shows%20multiple%20kubectl_get%20tool%20output%20sections",
+        "prevChunkIds": []
+      },
+      "7": {
+        "chunkId": "14738c",
+        "hash": "765cde15",
+        "encoded": "2.%20**Added%20Error%20Handling**:%20Properly%20handles%20the%20%22'list'%20object%20has%20no%20attribute%20'lower'%22%20error",
+        "prevChunkIds": []
+      },
+      "9": {
+        "chunkId": "14738c",
+        "hash": "4cd63084",
+        "encoded": "##%20Key%20Changes%20Made",
+        "prevChunkIds": []
+      },
+      "11": {
+        "chunkId": "14738c",
+        "hash": "8076b7fc",
+        "encoded": "###%201.%20Conditional%20Display%20Logic",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "14738c",
+        "hash": "5853c6f1",
+        "encoded": "-%20Tool%20outputs%20are%20now%20hidden%20when%20running%20%22Zero%20Trust%20Auditor%22",
+        "prevChunkIds": []
+      },
+      "13": {
+        "chunkId": "14738c",
+        "hash": "f0db4ca4",
+        "encoded": "-%20Only%20the%20final%20Zero%20Trust%20assessment%20table%20is%20displayed",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "14738c",
+        "hash": "b9a0d70f",
+        "encoded": "-%20Progress%20bar%20and%20status%20updates%20are%20still%20shown",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "14738c",
+        "hash": "c004ae71",
+        "encoded": "###%202.%20Error%20Handling",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "14738c",
+        "hash": "ca23fea9",
+        "encoded": "-%20Added%20try-catch%20block%20around%20graph%20execution",
+        "prevChunkIds": []
+      },
+      "18": {
+        "chunkId": "14738c",
+        "hash": "8fd26f74",
+        "encoded": "-%20Specific%20handling%20for%20the%20'list'%20object%20error",
+        "prevChunkIds": []
+      },
+      "19": {
+        "chunkId": "14738c",
+        "hash": "940cd9ec",
+        "encoded": "-%20Graceful%20degradation%20to%20show%20available%20results%20even%20if%20execution%20encounters%20issues",
+        "prevChunkIds": []
+      },
+      "21": {
+        "chunkId": "14738c",
+        "hash": "658a679e",
+        "encoded": "###%203.%20Cleaner%20UI%20Flow",
+        "prevChunkIds": []
+      },
+      "22": {
+        "chunkId": "14738c",
+        "hash": "37fd858a",
+        "encoded": "For%20Zero%20Trust%20Auditor,%20users%20will%20see:",
+        "prevChunkIds": []
+      },
+      "23": {
+        "chunkId": "14738c",
+        "hash": "e814caff",
+        "encoded": "-%20%22Executing:%20Zero%20Trust%20Auditor%22%20header",
+        "prevChunkIds": []
+      },
+      "24": {
+        "chunkId": "14738c",
+        "hash": "88869923",
+        "encoded": "-%20Progress%20bar%20showing%20execution%20status",
+        "prevChunkIds": []
+      },
+      "25": {
+        "chunkId": "14738c",
+        "hash": "dca5bd8d",
+        "encoded": "-%20Status%20messages%20(%22Executing%20kubectl%20commands...%22,%20%22Processing%20results...%22)",
+        "prevChunkIds": []
+      },
+      "26": {
+        "chunkId": "14738c",
+        "hash": "95adb162",
+        "encoded": "-%20Final%20Zero%20Trust%20Security%20Assessment%20table%20only",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "14738c",
+        "hash": "ed067b32",
+        "encoded": "-%20Summary%20metrics%20(Compliant,%20Non-Compliant,%20Partial%20counts)",
+        "prevChunkIds": []
+      },
+      "28": {
+        "chunkId": "14738c",
+        "hash": "a43b1613",
+        "encoded": "-%20Download%20button%20for%20raw%20results%20(if%20needed)",
+        "prevChunkIds": []
+      },
+      "30": {
+        "chunkId": "14738c",
+        "hash": "0498eca1",
+        "encoded": "##%20How%20to%20Run%20the%20Application",
+        "prevChunkIds": []
+      },
+      "32": {
+        "chunkId": "14738c",
+        "hash": "995e4d3f",
+        "encoded": "###%20Via%20Streamlit%20GUI%20(Recommended)",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "14738c",
+        "hash": "46ebfbf2",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "14738c",
+        "hash": "65160ee0",
+        "encoded": "cd%20/Users/rohkumar46/chatbot-web",
+        "prevChunkIds": []
+      },
+      "35": {
+        "chunkId": "14738c",
+        "hash": "871c8b91",
+        "encoded": "streamlit%20run%20app.py",
+        "prevChunkIds": []
+      },
+      "36": {
+        "chunkId": "14738c",
+        "hash": "f164efe7",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "38": {
+        "chunkId": "14738c",
+        "hash": "239c759a",
+        "encoded": "Or%20if%20app.py%20doesn't%20exist:",
+        "prevChunkIds": []
+      },
+      "39": {
+        "chunkId": "14738c",
+        "hash": "41544711",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "40": {
+        "chunkId": "14738c",
+        "hash": "2b41658b",
+        "encoded": "streamlit%20run%20src/langgraphagenticai/main.py",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "14738c",
+        "hash": "8c4e1488",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "14738c",
+        "hash": "fd212e46",
+        "encoded": "###%20Via%20Command%20Line",
+        "prevChunkIds": []
+      },
+      "44": {
+        "chunkId": "14738c",
+        "hash": "a3aed7a5",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "14738c",
+        "hash": "a990280f",
+        "encoded": "python%20-m%20src.langgraphagenticai.main%20--no-ui",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "14738c",
+        "hash": "80090741",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "14738c",
+        "hash": "6fb5c541",
+        "encoded": "##%20Expected%20GUI%20Output",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "14738c",
+        "hash": "0323c1aa",
+        "encoded": "When%20running%20Zero%20Trust%20Auditor%20via%20GUI,%20you'll%20now%20see:",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "14738c",
+        "hash": "e7f65795",
+        "encoded": "1.%20**Clean%20Header**:%20%22Executing:%20Zero%20Trust%20Auditor%22",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "14738c",
+        "hash": "b242e08f",
+        "encoded": "2.%20**Progress%20Tracking**:",
+        "prevChunkIds": []
+      },
+      "55": {
+        "chunkId": "14738c",
+        "hash": "b8660334",
+        "encoded": "-%20Progress%20bar%20(0-100%25)",
+        "prevChunkIds": []
+      },
+      "56": {
+        "chunkId": "14738c",
+        "hash": "a098bc9b",
+        "encoded": "-%20Status%20updates%20without%20clutter",
+        "prevChunkIds": []
+      },
+      "58": {
+        "chunkId": "14738c",
+        "hash": "a788e5a9",
+        "encoded": "3.%20**Final%20Assessment%20Only**:",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "14738c",
+        "hash": "4e510c34",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "60": {
+        "chunkId": "14738c",
+        "hash": "3c655cd1",
+        "encoded": "Zero%20Trust%20Security%20Assessment",
+        "prevChunkIds": []
+      },
+      "62": {
+        "chunkId": "14738c",
+        "hash": "c6689741",
+        "encoded": "%E2%95%94%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%A4%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%A4%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%97",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "14738c",
+        "hash": "d634f57a",
+        "encoded": "%E2%95%91%20Check%20Description%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%94%82%20Status%20%E2%94%82%20Details%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "64": {
+        "chunkId": "14738c",
+        "hash": "1a1ac867",
+        "encoded": "%E2%95%A0%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%AA%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%AA%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%A3",
+        "prevChunkIds": []
+      },
+      "65": {
+        "chunkId": "14738c",
+        "hash": "abbdb092",
+        "encoded": "%E2%95%91%20Istio%20installed%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%94%82%20Yes%20%20%20%20%E2%94%82%20Found%201%20istiod%20pod(s)%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "66": {
+        "chunkId": "14738c",
+        "hash": "71679b09",
+        "encoded": "%E2%95%91%20Istio%20mode/profile%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%94%82%20Ambient%E2%94%82%20ztunnel%20daemonset%20found%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "67": {
+        "chunkId": "14738c",
+        "hash": "eae2420e",
+        "encoded": "%E2%95%91%20Strict%20mTLS%20enforced%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%94%82%20No%20%20%20%20%20%E2%94%82%20No%20strict%20mTLS%20found%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "68": {
+        "chunkId": "14738c",
+        "hash": "993fe7be",
+        "encoded": "%E2%95%91%20Default-deny%20AuthorizationPolicy%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%94%82%20No%20%20%20%20%20%E2%94%82%20No%20default-deny%20found%20%20%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "69": {
+        "chunkId": "14738c",
+        "hash": "082d73d5",
+        "encoded": "%E2%95%91%20Allow-only%20AuthorizationPolicy%20defined%20%20%20%20%20%20%20%20%20%E2%94%82%20No%20%20%20%20%20%E2%94%82%20No%20ALLOW%20policies%20found%20%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "70": {
+        "chunkId": "14738c",
+        "hash": "b0e1f421",
+        "encoded": "%E2%95%91%20Kubernetes%20NetworkPolicy%20default-deny%20exists%20%20%20%E2%94%82%20No%20%20%20%20%20%E2%94%82%20No%20default-deny%20NetworkPolicy%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "71": {
+        "chunkId": "14738c",
+        "hash": "477f4321",
+        "encoded": "%E2%95%91%20NetworkPolicies%20present%20in%20all%20namespaces%20%20%20%20%20%20%E2%94%82%20No%20%20%20%20%20%E2%94%82%20No%20NetworkPolicies%20found%20%20%20%20%20%20%20%20%20%20%E2%95%91",
+        "prevChunkIds": []
+      },
+      "72": {
+        "chunkId": "14738c",
+        "hash": "2475ac11",
+        "encoded": "%E2%95%9A%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%A7%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%A7%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%90%E2%95%9D",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "14738c",
+        "hash": "d2a4f350",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "14738c",
+        "hash": "179e2bd1",
+        "encoded": "4.%20**Summary%20Metrics**:",
+        "prevChunkIds": []
+      },
+      "76": {
+        "chunkId": "14738c",
+        "hash": "1a417ad8",
+        "encoded": "-%20Compliant:%20X",
+        "prevChunkIds": []
+      },
+      "77": {
+        "chunkId": "14738c",
+        "hash": "7c792622",
+        "encoded": "-%20Non-Compliant:%20Y",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "14738c",
+        "hash": "33eb85da",
+        "encoded": "-%20Partial:%20Z",
+        "prevChunkIds": []
+      },
+      "80": {
+        "chunkId": "14738c",
+        "hash": "ac7e2c8a",
+        "encoded": "5.%20**Download%20Option**:%20Button%20to%20download%20raw%20results%20as%20JSON",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "14738c",
+        "hash": "819accc1",
+        "encoded": "##%20Benefits",
+        "prevChunkIds": []
+      },
+      "84": {
+        "chunkId": "14738c",
+        "hash": "fbbd9325",
+        "encoded": "1.%20**Focused%20Display**:%20Users%20see%20only%20what%20matters%20-%20the%20final%20security%20assessment",
+        "prevChunkIds": []
+      },
+      "85": {
+        "chunkId": "14738c",
+        "hash": "8a9749b5",
+        "encoded": "2.%20**No%20Clutter**:%20Raw%20kubectl%20outputs%20are%20hidden%20but%20still%20collected%20for%20analysis",
+        "prevChunkIds": []
+      },
+      "86": {
+        "chunkId": "14738c",
+        "hash": "0612a740",
+        "encoded": "3.%20**Better%20UX**:%20Clean,%20professional%20interface%20for%20security%20audits",
+        "prevChunkIds": []
+      },
+      "87": {
+        "chunkId": "14738c",
+        "hash": "2b5eafeb",
+        "encoded": "4.%20**Error%20Resilience**:%20Handles%20common%20errors%20gracefully",
+        "prevChunkIds": []
+      },
+      "88": {
+        "chunkId": "14738c",
+        "hash": "239fbe22",
+        "encoded": "5.%20**Still%20Accessible**:%20Raw%20data%20can%20be%20downloaded%20if%20needed%20for%20debugging",
+        "prevChunkIds": []
+      },
+      "90": {
+        "chunkId": "14738c",
+        "hash": "781719bc",
+        "encoded": "##%20Troubleshooting",
+        "prevChunkIds": []
+      },
+      "92": {
+        "chunkId": "14738c",
+        "hash": "1f22fbb3",
+        "encoded": "###%20If%20you%20still%20see%20tool%20outputs:",
+        "prevChunkIds": []
+      },
+      "93": {
+        "chunkId": "14738c",
+        "hash": "ef893ebc",
+        "encoded": "1.%20Ensure%20the%20changes%20to%20display_result.py%20are%20saved",
+        "prevChunkIds": []
+      },
+      "94": {
+        "chunkId": "14738c",
+        "hash": "29f43e55",
+        "encoded": "2.%20Restart%20the%20Streamlit%20application",
+        "prevChunkIds": []
+      },
+      "95": {
+        "chunkId": "14738c",
+        "hash": "11e94888",
+        "encoded": "3.%20Clear%20browser%20cache%20and%20reload",
+        "prevChunkIds": []
+      },
+      "97": {
+        "chunkId": "14738c",
+        "hash": "330dfeff",
+        "encoded": "###%20If%20the%20assessment%20table%20doesn't%20appear:",
+        "prevChunkIds": []
+      },
+      "98": {
+        "chunkId": "14738c",
+        "hash": "135c2a2e",
+        "encoded": "1.%20Check%20that%20the%20MCP%20server%20is%20running%20on%20localhost:3001",
+        "prevChunkIds": []
+      },
+      "99": {
+        "chunkId": "14738c",
+        "hash": "538421e2",
+        "encoded": "2.%20Ensure%20kubectl%20is%20configured%20and%20accessible",
+        "prevChunkIds": []
+      },
+      "100": {
+        "chunkId": "14738c",
+        "hash": "3eac2736",
+        "encoded": "3.%20Verify%20that%20the%20Zero%20Trust%20Analyzer%20module%20is%20working",
+        "prevChunkIds": []
+      },
+      "102": {
+        "chunkId": "14738c",
+        "hash": "5f037d9a",
+        "encoded": "###%20For%20the%20'list'%20object%20error:",
+        "prevChunkIds": []
+      },
+      "103": {
+        "chunkId": "14738c",
+        "hash": "7da563b3",
+        "encoded": "-%20The%20error%20is%20now%20handled%20gracefully",
+        "prevChunkIds": []
+      },
+      "104": {
+        "chunkId": "14738c",
+        "hash": "95928a49",
+        "encoded": "-%20The%20application%20will%20continue%20processing%20available%20results",
+        "prevChunkIds": []
+      },
+      "105": {
+        "chunkId": "14738c",
+        "hash": "f2a2d41f",
+        "encoded": "-%20Check%20the%20zero_trust_analyzer.py%20for%20any%20list/string%20type%20mismatches",
+        "prevChunkIds": []
+      },
+      "107": {
+        "chunkId": "14738c",
+        "hash": "4029be9b",
+        "encoded": "##%20Next%20Steps",
+        "prevChunkIds": []
+      },
+      "109": {
+        "chunkId": "14738c",
+        "hash": "043677b9",
+        "encoded": "1.%20Run%20the%20application%20with%20the%20updated%20GUI",
+        "prevChunkIds": []
+      },
+      "110": {
+        "chunkId": "14738c",
+        "hash": "640d13b1",
+        "encoded": "2.%20Select%20%22Zero%20Trust%20Auditor%22%20from%20the%20dropdown",
+        "prevChunkIds": []
+      },
+      "111": {
+        "chunkId": "14738c",
+        "hash": "05c17d3c",
+        "encoded": "3.%20Watch%20the%20clean%20execution%20without%20tool%20output%20clutter",
+        "prevChunkIds": []
+      },
+      "112": {
+        "chunkId": "14738c",
+        "hash": "1242b913",
+        "encoded": "4.%20Review%20the%20final%20assessment%20table",
+        "prevChunkIds": []
+      },
+      "113": {
+        "chunkId": "14738c",
+        "hash": "a6b57eff",
+        "encoded": "5.%20Download%20raw%20results%20only%20if%20needed%20for%20detailed%20analysis",
+        "prevChunkIds": []
+      },
+      "115": {
+        "chunkId": "14738c",
+        "hash": "f5789a1b",
+        "encoded": "The%20GUI%20now%20provides%20a%20professional,%20focused%20interface%20specifically%20optimized%20for%20Zero%20Trust%20security%20audits!",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

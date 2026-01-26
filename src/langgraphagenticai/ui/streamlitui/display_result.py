@@ -1,0 +1,558 @@
+import streamlit as st
+from langchain_core.messages import AIMessage, ToolMessage
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from src.langgraphagenticai.utils.zero_trust_analyzer import ZeroTrustAnalyzer
+from src.langgraphagenticai.utils.cli_output_formatter import CLIOutputFormatter
+import json
+
+class DisplayResultStreamlit:
+
+    def __init__(self, graph, usecase):
+        self.graph = graph
+        self.usecase = usecase
+        self.tool_results = []
+        self.formatter = CLIOutputFormatter(show_raw_output=False)
+
+    async def display_result_on_ui(self):
+        """
+        Displays the result of the agentic workflow in the Streamlit UI with live progress.
+        """
+        st.markdown(f"## 🔐 {self.usecase}")
+        
+        # Create containers for real-time updates
+        status_container = st.container()
+        logs_container = st.container()
+        tool_output_container = st.container()
+        final_result_container = st.container()
+        
+        # Status and logs placeholders
+        with status_container:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                event_counter = st.empty()
+                event_counter.metric("Events", 0)
+            with col2:
+                tool_counter = st.empty()
+                tool_counter.metric("Tools Executed", 0)
+            with col3:
+                probe_counter = st.empty()
+                probe_counter.metric("Probes Collected", 0)
+        
+        with logs_container:
+            st.markdown("### 📊 Live Execution Log")
+            log_output = st.empty()
+            log_messages = []
+        
+        # Helper to run a graph and collect tool outputs (non-streaming)
+        async def run_graph_and_collect(graph_obj, user_message, max_events=200, stop_on_tool_names=None, required_probe_prefixes=None):
+            collected_tool_results = []
+            tool_call_map = {}
+            executed_probe_keys = set()
+            event_count = 0
+            
+            # Increase recursion limit for comprehensive audits (more tool calls needed)
+            recursion_limit = 150 if is_comprehensive else 50
+
+            async for event in graph_obj.astream({"messages": [("human", user_message)]}, {"recursion_limit": recursion_limit}):
+                event_count += 1
+                
+                if event_count > max_events:
+                    log_messages.append(f"⚠️  Max events ({max_events}) reached")
+                    with log_output:
+                        st.code("\n".join(log_messages[-20:]))
+                    break
+
+                self.formatter.process_event(event)
+
+                # Map planned tool calls
+                if "chatbot" in event and isinstance(event["chatbot"], dict):
+                    for msg in event["chatbot"].get("messages", []):
+                        tcalls = getattr(msg, "tool_calls", None) or []
+                        if tcalls:
+                            log_messages.append(f"📝 [Event {event_count}] LLM Planning {len(tcalls)} tool(s)")
+                            for tc in tcalls:
+                                name = tc.get("name", "?")
+                                args = tc.get("args", {})
+                                rt = args.get("resourceType", "?")
+                                ns = args.get("namespace", "all")
+                                log_messages.append(f"   • {name}(resourceType='{rt}', namespace='{ns}')")
+                                tc_id = tc.get("id")
+                                if tc_id:
+                                    tool_call_map[tc_id] = (tc.get("name"), tc.get("args", {}))
+
+                # Collect tool outputs
+                if "tools" in event and isinstance(event["tools"], dict):
+                    for msg in event["tools"].get("messages", []):
+                        content = getattr(msg, "content", None)
+                        if not content or not str(content).strip():
+                            continue
+
+                        tool_call_id = getattr(msg, "tool_call_id", None)
+                        tool_name = getattr(msg, "tool_name", None)
+                        
+                        # Log execution
+                        if "error" in str(content).lower() or "forbidden" in str(content).lower():
+                            log_messages.append(f"❌ [Event {event_count}] {tool_name}: ERROR")
+                        else:
+                            lines = str(content).split("\n")
+                            log_messages.append(f"✓ [Event {event_count}] {tool_name}: Got {len(lines)} lines")
+                        
+                        record = {"output": content, "tool_call_id": tool_call_id, "tool_name": tool_name}
+                        self.tool_results.append(record)
+                        collected_tool_results.append(record)
+
+                        # Map to planned probe
+                        if tool_call_id and tool_call_id in tool_call_map:
+                            planned_name, planned_args = tool_call_map.get(tool_call_id, (None, {}))
+                            rt = (planned_args or {}).get("resourceType") or (planned_args or {}).get("resource") or ""
+                            ns = (planned_args or {}).get("namespace") or ""
+                            probe_key = f"{str(rt).lower()}:{ns}" if ns else f"{str(rt).lower()}:"
+                            executed_probe_keys.add(probe_key)
+
+                        with tool_output_container:
+                            with st.expander(f"Tool Output - {tool_name or getattr(msg, 'tool_name', 'kubectl_get')}", expanded=False):
+                                st.code(str(content)[:2000], language="yaml")
+                        
+                        if stop_on_tool_names and tool_name in stop_on_tool_names:
+                            log_messages.append(f"✅ Stopping: {tool_name} executed")
+                            with log_output:
+                                st.code("\n".join(log_messages[-20:]))
+                            return collected_tool_results, executed_probe_keys
+                
+                # Update metrics and logs every event
+                event_counter.metric("Events", event_count)
+                tool_counter.metric("Tools Executed", len(collected_tool_results))
+                probe_counter.metric("Probes Collected", len(executed_probe_keys))
+                
+                with log_output:
+                    st.code("\n".join(log_messages[-20:]))  # Show last 20 lines
+
+                # Early stop when we've found required probes
+                if required_probe_prefixes:
+                    probes_found = {p.split(":")[0] for p in executed_probe_keys}
+                    if required_probe_prefixes.issubset(probes_found):
+                        log_messages.append(f"✅ All required probes executed ({len(executed_probe_keys)} total)")
+                        with log_output:
+                            st.code("\n".join(log_messages[-20:]))
+                        break
+
+            return collected_tool_results, executed_probe_keys
+
+        # Determine which workflow to run based on user selection
+        is_comprehensive = "comprehensive" in self.usecase.lower()
+        
+        # Build appropriate graph
+        try:
+            model = getattr(self.graph, "_agenticai_model", None)
+            if model:
+                from src.langgraphagenticai.graph.graph_builder import GraphBuilder
+                # Use the selected workflow, not hardcoded auditor
+                workflow_name = self.usecase if is_comprehensive else "Zero Trust Auditor"
+                result_graph = await GraphBuilder(model).setup_graph(workflow_name)
+            else:
+                result_graph = self.graph
+        except Exception:
+            result_graph = self.graph
+
+        # Customize message and display based on workflow type
+        if is_comprehensive:
+            # Stage 1: Get namespaces
+            user_message = "Query all Kubernetes namespaces to get the complete list."
+            result_header = "## 🔍 Comprehensive Security Audit - Stage 1: Collecting Namespaces"
+            # Don't stop early for comprehensive - we need all the data
+            cleaned_prefixes = None
+        else:
+            user_message = "Execute Zero Trust Auditor checks now. Use available tools as needed to gather cluster data and provide a final assessment."
+            result_header = "## Zero Trust Auditor: Pre-deploy Check"
+            cleaned_prefixes = {"namespaces", "pods", "daemonsets", "peerauthentication", "authorizationpolicy", "networkpolicy"}
+
+        with final_result_container:
+            st.markdown("---")
+            st.markdown(result_header)
+
+        audit_tool_results, audit_probes = await run_graph_and_collect(result_graph, user_message, max_events=1000, required_probe_prefixes=cleaned_prefixes)
+        
+        # If comprehensive, run stage 2 after stage 1
+        if is_comprehensive:
+            st.markdown("### ✅ Stage 1 Complete - Got Namespaces")
+            st.markdown("---")
+            st.markdown("## 🔍 Comprehensive Security Audit - Stage 2: Analyzing All Resources")
+            
+            # Parse namespaces from Stage 1 results
+            namespaces = []
+            for result in audit_tool_results:
+                try:
+                    output_data = json.loads(result.get("output", "{}"))
+                    if "items" in output_data:
+                        for item in output_data["items"]:
+                            if item.get("kind") == "Namespace":
+                                namespaces.append(item.get("name"))
+                except:
+                    pass
+            
+            # Fallback if parsing failed
+            if not namespaces:
+                namespaces = ["default", "aks-command", "application", "argocd", "cert-manager", "kube-system", 
+                             "kube-public", "kube-node-lease", "gen-ai-work-ns", "genai-fe", "falkordb", "marex", 
+                             "mcp", "mcpserver", "mock", "mongodb", "neo4j", "persona", "visual", "weaviate", "axa", "lsec"]
+            
+            st.markdown(f"**Querying 6 resource types for {len(namespaces)} namespaces...**")
+            
+            # Stage 2: Direct MCP tool calls per resource type to ensure deterministic coverage
+            audit_tool_results_stage2 = []
+            progress_placeholder = st.empty()
+            resource_types = ["pods", "deployments", "daemonsets", "statefulsets", "rolebindings", "networkpolicies"]
+            cluster_resources = ["clusterroles", "clusterrolebindings", "peerauthentication", "authorizationpolicy"]
+            total_queries = len(namespaces) * len(resource_types) + len(cluster_resources)
+            query_count = 0
+
+            # Initialize MCP client and kubectl_get tool
+            client = MultiServerMCPClient({
+                "kubernetes": {
+                    "url": "http://48.194.37.51:3001/mcp",
+                    "transport": "streamable_http",
+                }
+            })
+            tools = await client.get_tools()
+            kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
+            
+            # Query each namespace for each resource type
+            for ns_idx, ns in enumerate(namespaces, 1):
+                for rt in resource_types:
+                    query_count += 1
+                    progress_placeholder.markdown(f"⏳ Query {query_count}/{total_queries}: {rt} in **{ns}** ({ns_idx}/{len(namespaces)} namespaces)")
+                    args = {"resourceType": rt, "namespace": ns, "output": "json"}
+                    try:
+                        result = await kubectl_get_tool.ainvoke(args)
+                        audit_tool_results_stage2.append({
+                            "tool_name": "kubectl_get",
+                            "resourceType": rt,
+                            "namespace": ns,
+                            "output": result,
+                        })
+                    except Exception as e:
+                        audit_tool_results_stage2.append({
+                            "tool_name": "kubectl_get",
+                            "resourceType": rt,
+                            "namespace": ns,
+                            "error": str(e),
+                        })
+            
+            # Query cluster-wide resources
+            for cr in cluster_resources:
+                query_count += 1
+                progress_placeholder.markdown(f"⏳ Query {query_count}/{total_queries}: cluster-wide {cr}")
+                args = {"resourceType": cr, "output": "json"}
+                try:
+                    result = await kubectl_get_tool.ainvoke(args)
+                    audit_tool_results_stage2.append({
+                        "tool_name": "kubectl_get",
+                        "resourceType": cr,
+                        "output": result,
+                    })
+                except Exception as e:
+                    audit_tool_results_stage2.append({
+                        "tool_name": "kubectl_get",
+                        "resourceType": cr,
+                        "error": str(e),
+                    })
+            
+            # Combine results from both stages
+            audit_tool_results = audit_tool_results + audit_tool_results_stage2
+            
+            progress_placeholder.markdown(f"### ✅ Stage 2 Complete - Executed {query_count} queries across {len(namespaces)} namespaces")
+        else:
+            user_message = "Execute Zero Trust Auditor checks now. Use available tools as needed to gather cluster data and provide a final assessment."
+            cleaned_prefixes = {"namespaces", "pods", "daemonsets", "peerauthentication", "authorizationpolicy", "networkpolicy"}
+        
+        result_header = "## 🔍 Comprehensive Security Audit" if is_comprehensive else "## Zero Trust Auditor: Pre-deploy Check"
+
+        with final_result_container:
+            st.markdown("---")
+            st.markdown(result_header)
+
+        audit_tool_results, audit_probes = await run_graph_and_collect(result_graph, user_message, max_events=1000, required_probe_prefixes=cleaned_prefixes)
+
+        # Display pre-deploy assessment
+        with final_result_container:
+            if audit_tool_results:
+                # Show raw audit tool results for debugging in the UI
+                with st.expander("Raw Audit Tool Results (debug)", expanded=False):
+                    st.write(f"Total collected (raw): {len(audit_tool_results)}")
+                    for i, r in enumerate(audit_tool_results):
+                        tool_name = r.get('tool_name') or r.get('name') or 'unknown'
+                        tool_call_id = r.get('tool_call_id') or ''
+                        out = r.get('output')
+                        out_type = type(out).__name__
+                        try:
+                            display_out = out if isinstance(out, str) else json.dumps(out)
+                        except Exception:
+                            display_out = str(out)
+                        st.markdown(f"**raw #{i}** tool={tool_name} id={tool_call_id} type={out_type}")
+                        st.code(display_out if len(str(display_out)) < 1000 else str(display_out)[:1000] + '...', language='yaml')
+
+                    # Also show any formatted results the CLI formatter captured
+                    formatted_results = self.formatter.get_tool_results() or []
+                    st.write(f"Total formatted (formatter): {len(formatted_results)}")
+                    for i, r in enumerate(formatted_results):
+                        try:
+                            display_out = r.get('output') if isinstance(r, dict) else str(r)
+                        except Exception:
+                            display_out = str(r)
+                        st.markdown(f"**fmt #{i}**")
+                        st.code(display_out if len(str(display_out)) < 1000 else str(display_out)[:1000] + '...', language='yaml')
+
+                # Prefer formatter's parsed outputs if available (they extract JSON text from tool content reliably)
+                source_for_analysis = formatted_results if formatted_results else audit_tool_results
+
+                # Normalize outputs to strings before analysis so parsing is consistent with CLI
+                normalized = []
+                for r in source_for_analysis:
+                    if not (isinstance(r, dict) and r.get('output')):
+                        continue
+                    out = r.get('output')
+                    if isinstance(out, str):
+                        out_text = out
+                    else:
+                        try:
+                            out_text = json.dumps(out)
+                        except Exception:
+                            out_text = str(out)
+                    # Filter obvious errors
+                    out_text_lower = out_text.strip().lower()
+                    if out_text_lower.startswith('error:') or 'status is not a valid tool' in out_text_lower:
+                        continue
+                    new_r = {**r, 'output': out_text}
+                    normalized.append(new_r)
+
+                st.write(f"[DEBUG] Normalized entries for analysis: {len(normalized)}")
+
+                # For comprehensive audit, display raw LLM output directly
+                # For standard auditor, use analyzer to generate formatted assessment
+                if is_comprehensive:
+                    # Comprehensive workflow - show the LLM's comprehensive analysis report
+                    st.markdown("### 📋 Comprehensive Security Audit Report")
+                    
+                    # The comprehensive audit generates a full report from the LLM
+                    # We need to get the final analysis from the last AI message in the graph
+                    final_report = None
+                    
+                    # Look for the final comprehensive report in the last AI response
+                    if audit_tool_results:
+                        # The last meaningful response should be the analysis
+                        # We'll show the collected data summary plus ask for formatted output
+                        
+                        # First, show resource inventory from collected data
+                        if normalized:
+                            st.markdown("#### 📊 Cluster Resource Inventory")
+                            resource_count = {}
+                            namespace_data = {}
+                            
+                            for entry in normalized:
+                                try:
+                                    out = entry.get('output', '')
+                                    j = json.loads(out) if isinstance(out, str) else out
+                                    items = []
+                                    if isinstance(j, dict):
+                                        items = j.get('items', [])
+                                    elif isinstance(j, list):
+                                        items = j
+                                    
+                                    if items:
+                                        first_item = items[0] if isinstance(items, list) else items
+                                        kind = first_item.get('kind', 'Unknown')
+                                        count = len(items) if isinstance(items, list) else 1
+                                        resource_count[kind] = resource_count.get(kind, 0) + count
+                                        
+                                        # Track by namespace
+                                        if kind in ['Pod', 'Deployment', 'DaemonSet', 'StatefulSet', 'Role', 'RoleBinding', 'NetworkPolicy']:
+                                            for item in (items if isinstance(items, list) else [items]):
+                                                ns = item.get('metadata', {}).get('namespace') or item.get('namespace') or 'cluster-wide'
+                                                if ns not in namespace_data:
+                                                    namespace_data[ns] = {}
+                                                namespace_data[ns][kind] = namespace_data[ns].get(kind, 0) + 1
+                                except:
+                                    pass
+                            
+                            # Display overall metrics
+                            if resource_count:
+                                cols = st.columns(min(4, len(resource_count)))
+                                for idx, (kind, count) in enumerate(sorted(resource_count.items())):
+                                    with cols[idx % len(cols)]:
+                                        st.metric(f"{kind}", count)
+                            
+                            # Display per-namespace breakdown
+                            st.markdown("#### 🔍 Per-Namespace Breakdown")
+                            for ns in sorted(namespace_data.keys()):
+                                with st.expander(f"**{ns}**"):
+                                    ns_resources = namespace_data[ns]
+                                    cols = st.columns(len(ns_resources))
+                                    for idx, (kind, count) in enumerate(sorted(ns_resources.items())):
+                                        with cols[idx]:
+                                            st.metric(kind, count)
+                    
+                    # Show raw audit data for reference
+                    with st.expander("📋 Raw Audit Data (for reference)"):
+                        for i, result in enumerate(audit_tool_results[:10]):  # Show first 10
+                            tool_name = result.get('tool_name') or 'unknown'
+                            output = result.get('output') or result.get('content', '')
+                            
+                            if output and ('error' not in str(output).lower() and 'not a valid tool' not in str(output).lower()):
+                                st.markdown(f"**{tool_name}**")
+                                output_str = output if isinstance(output, str) else json.dumps(output, indent=2)
+                                try:
+                                    st.code(output_str[:1500], language="json")
+                                except:
+                                    st.code(output_str[:1500], language="text")
+                else:
+                    # Standard auditor workflow - use analyzer for formatted assessment
+                    analyzer = ZeroTrustAnalyzer()
+                    assessment = analyzer.analyze_and_generate_report(normalized)
+                    st.code(assessment, language="text")
+
+                    # Summarize evidence similar to CLI: parse normalized outputs for common resources
+                    namespaces = set()
+                    istio_pods = []
+                    istiod_pods = []
+                    ztunnel_daemonsets = []
+                    peerauth_ns = set()
+                    netpol_ns = set()
+
+                    for entry in normalized:
+                        out = entry.get('output')
+                        # Try JSON parse and handle both dict and list shapes
+                        try:
+                            j = json.loads(out) if isinstance(out, str) else out
+                            items = []
+                            if isinstance(j, dict):
+                                items = j.get('items') or ([j] if j.get('kind') else [])
+                            elif isinstance(j, list):
+                                items = j
+
+                            for it in items:
+                                if not isinstance(it, dict):
+                                    continue
+                                kind = (it.get('kind') or '').lower()
+                                meta = it.get('metadata') or {}
+                                name = meta.get('name') or it.get('name')
+                                ns = meta.get('namespace') or it.get('namespace')
+                                if kind == 'namespace' and name:
+                                    namespaces.add(name)
+                                if kind == 'pod' and name:
+                                    if ns:
+                                        istio_pods.append(f"{name} ({ns})")
+                                        if 'istiod' in (name or '').lower():
+                                            istiod_pods.append(f"{name} ({ns})")
+                                if kind == 'daemonset' and name:
+                                    if 'ztunnel' in (name or '').lower():
+                                        ztunnel_daemonsets.append(name)
+                                if kind == 'peerauthentication' and ns:
+                                    peerauth_ns.add(ns)
+                                if kind == 'networkpolicy' and ns:
+                                    netpol_ns.add(ns)
+                        except Exception:
+                            # Simple text searches if not JSON
+                            txt = str(out).lower()
+                            if 'istio' in txt and 'namespace' in txt:
+                                namespaces.add('istio-system')
+                            if 'ztunnel' in txt:
+                                ztunnel_daemonsets.append('ztunnel')
+
+                    # Show evidence block
+                    st.markdown('**Evidence:**')
+                    if namespaces:
+                        st.write(f"Namespaces found: {', '.join(sorted(namespaces))}")
+                    if istio_pods:
+                        st.write(f"Istio-related pods: {', '.join(istio_pods)}")
+                    if istiod_pods:
+                        st.write(f"Istiod pods: {', '.join(istiod_pods)}")
+                    if ztunnel_daemonsets:
+                        st.write(f"ztunnel daemonsets: {', '.join(sorted(set(ztunnel_daemonsets)))}")
+                    if peerauth_ns:
+                        st.write(f"PeerAuthentication namespaces: {', '.join(sorted(peerauth_ns))}")
+                    if netpol_ns:
+                        st.write(f"NetworkPolicy namespaces: {', '.join(sorted(netpol_ns))}")
+            else:
+                st.info("Auditor found no tool results for pre-deploy check.")
+
+        if "Zero Trust Creator" in self.usecase:
+            creator_deploy_message = '''YOU MUST OUTPUT ONLY VALID JSON TOOL CALLS. NO TEXT, NO EXPLANATIONS, NO REASONING, NO MARKDOWN.
+
+Your task is to deploy the Helm chart as release name "auth" in namespace "istio-system".
+
+The chart URL is: https://rohkum143.github.io/zero-trust-charts/authorization-policy-0.1.0.tgz
+
+Always use upgrade_helm_chart — it is idempotent and will not create new revisions if nothing changed.
+
+OUTPUT EXACTLY THIS JSON (copy precisely, do not change anything):
+
+{"name": "upgrade_helm_chart", "parameters": {"name": "auth", "chart": "https://rohkum143.github.io/zero-trust-charts/authorization-policy-0.1.0.tgz", "namespace": "istio-system"}}
+
+If the above fails with "release not found", then use:
+
+{"name": "install_helm_chart", "parameters": {"name": "auth", "chart": "https://rohkum143.github.io/zero-trust-charts/authorization-policy-0.1.0.tgz", "namespace": "istio-system"}}
+
+CRITICAL RULES:
+- Use "name" parameter with value "auth" — never omit it.
+- Use absolute chart URL as "chart".
+- Do not add repo, values, or any other fields.
+- Output only one JSON line.
+- After successful deployment, you are done — do not call more tools.
+
+OUTPUT ONLY THE JSON ABOVE.'''
+
+            # Run creator graph (use model-attached compiled graph if available so creators and auditors share model)
+            try:
+                from src.langgraphagenticai.graph.graph_builder import GraphBuilder
+                creator_graph = await GraphBuilder(model).setup_graph("Zero Trust Creator") if model else self.graph
+            except Exception:
+                creator_graph = self.graph
+
+            deploy_tool_results, deploy_probes = await run_graph_and_collect(creator_graph, creator_deploy_message, max_events=100, stop_on_tool_names={"upgrade_helm_chart", "install_helm_chart"})
+
+            with final_result_container:
+                st.markdown("---")
+                st.markdown("## Creator: Deploy Results")
+                if deploy_tool_results:
+                    for r in deploy_tool_results:
+                        st.write(r)
+                else:
+                    st.info("No deploy tool output detected. Check the model/Tool bindings.")
+
+            # Post-deploy verification
+            with final_result_container:
+                st.markdown("---")
+                st.markdown("## Zero Trust Auditor: Post-deploy Verification")
+
+            audit_tool_results_post, audit_probes_post = await run_graph_and_collect(auditor_graph, user_message, max_events=200, required_probe_prefixes=cleaned_prefixes)
+            with final_result_container:
+                if audit_tool_results_post:
+                    cleaned_post = [r for r in audit_tool_results_post if isinstance(r, dict) and r.get('output') and not (str(r.get('output')).strip().lower().startswith('error:') or 'status is not a valid tool' in str(r.get('output')).lower())]
+                    analyzer = ZeroTrustAnalyzer()
+                    assessment_post = analyzer.analyze_and_generate_report(cleaned_post)
+                    st.code(assessment_post, language="text")
+                else:
+                    st.info("Post-deploy Auditor found no tool results.")
+
+        # Complete and show final results
+        with final_result_container:
+            st.markdown("---")
+            st.success("✅ Analysis complete!")
+
+        final_tool_results = self.formatter.get_tool_results() or self.tool_results
+        if final_tool_results or self.tool_results:
+            raw_json = json.dumps(final_tool_results if final_tool_results else self.tool_results, indent=2)
+            cleaned_json = json.dumps([r for r in (final_tool_results if final_tool_results else self.tool_results) if isinstance(r, dict) and r.get('output') and not (str(r.get('output')).strip().lower().startswith('error:') or 'status is not a valid tool' in str(r.get('output')).lower())], indent=2)
+
+            with final_result_container:
+                st.download_button(
+                    label="Download Cleaned Results (used for analysis)",
+                    data=cleaned_json,
+                    file_name=f"{self.usecase.replace(' ', '_')}_cleaned_results.json",
+                    mime="application/json")
+
+                st.download_button(
+                    label="Download Raw Results (includes errors)",
+                    data=raw_json,
+                    file_name=f"{self.usecase.replace(' ', '_')}_raw_results.json",
+                    mime="application/json")

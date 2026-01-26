@@ -1,0 +1,209 @@
+# Kubernetes Tools Documentation
+
+This document lists all available Kubernetes-related tools in a clean, readable format.
+
+## kubectl_get
+**Description**: Get or list Kubernetes resources by resource type, name, and optionally namespace.
+
+**Usage**: Retrieve details or list resources (e.g., pods, deployments, services).
+
+**Key Parameters**:
+- `resourceType` (required): Type of resource (e.g., pods, deployments)
+- `name` (optional): Specific resource name (omit to list all)
+- `namespace` (default: "default")
+- `output` (default: "json")
+- `allNamespaces`, `labelSelector`, `fieldSelector`
+
+**Read-only**: Yes
+
+## kubectl_describe
+**Description**: Describe Kubernetes resources in detail, including events and status.
+
+**Usage**: Deep inspection of a single resource.
+
+**Key Parameters**:
+- `resourceType` (required)
+- `name` (required)
+- `namespace` (default: "default")
+- `allNamespaces`
+
+**Read-only**: Yes
+
+## kubectl_apply
+**Description**: Apply a Kubernetes YAML manifest (from string or file).
+
+**Usage**: Declarative creation or update of resources.
+
+**Key Parameters**:
+- `manifest` or `filename`
+- `namespace` (default: "default")
+- `dryRun`, `force`
+
+**Read-only**: No
+
+## kubectl_create
+**Description**: Imperatively create resources (namespace, configmap, secret, deployment, etc.).
+
+**Usage**: Quick resource creation without full YAML.
+
+**Key Parameters**:
+- Varies by resource (e.g., `resourceType`, `name`, `fromLiteral`, `image`, `replicas`)
+
+**Read-only**: No
+
+## kubectl_logs
+**Description**: Get logs from pods, deployments, jobs, or cronjobs.
+
+**Usage**: Debugging container output.
+
+**Key Parameters**:
+- `resourceType` (required: pod/deployment/job/cronjob)
+- `name` (required)
+- `namespace` (required, default: "default")
+- `container`, `tail`, `since`, `timestamps`, `follow` (not recommended)
+
+**Read-only**: Yes
+
+## kubectl_scale
+**Description**: Scale a deployment, replicaset, or statefulset.
+
+**Usage**: Adjust replica count.
+
+**Key Parameters**:
+- `name` (required)
+- `replicas` (required)
+- `namespace` (default: "default")
+- `resourceType` (default: "deployment")
+
+**Read-only**: No
+
+## kubectl_patch
+**Description**: Patch a resource using strategic merge, JSON merge, or JSON patch.
+
+**Usage**: Partial updates to resources.
+
+**Key Parameters**:
+- `resourceType` (required)
+- `name` (required)
+- `patchType` (default: "strategic")
+- `patchData` or `patchFile`
+- `namespace` (default: "default")
+
+**Read-only**: No
+
+## kubectl_rollout
+**Description**: Manage rollouts (status, history, pause, resume, restart, undo).
+
+**Usage**: Control and monitor deployment rollouts.
+
+**Key Parameters**:
+- `subCommand` (required: status/pause/resume/restart/undo/history)
+- `resourceType` (default: "deployment")
+- `name` (required)
+- `namespace` (required, default: "default")
+
+**Read-only**: Mixed (status/history are read-only)
+
+## kubectl_context
+**Description**: List, get, or set the current kubeconfig context.
+
+**Usage**: Manage cluster contexts.
+
+**Key Parameters**:
+- `operation` (required: list/get/set)
+- `name` (for set)
+
+**Read-only**: Yes
+
+## explain_resource
+**Description**: Get Kubernetes API documentation for a resource or field (like `kubectl explain`).
+
+**Usage**: Learn about resource schema.
+
+**Key Parameters**:
+- `resource` (required, e.g., "pods" or "pods.spec.containers")
+- `recursive`, `apiVersion`
+
+**Read-only**: Yes
+
+## install_helm_chart
+**Description**: Install a Helm chart (supports standard helm or template + apply fallback).
+
+**Usage**: Deploy applications via Helm.
+
+**Key Parameters**:
+- `name` (required)
+- `chart` (required)
+- `namespace` (required)
+- `repo`, `values`, `useTemplate`, `createNamespace`
+
+**Read-only**: No
+
+## upgrade_helm_chart
+**Description**: Upgrade an existing Helm release.
+
+**Usage**: Update deployed Helm applications.
+
+**Key Parameters**:
+- `name` (required)
+- `chart` (required)
+- `namespace` (required)
+- `repo`, `values`
+
+**Read-only**: No
+
+## port_forward
+**Description**: Forward a local port to a port on a Kubernetes resource.
+
+**Usage**: Access services locally.
+
+**Key Parameters**:
+- `resourceType` (required)
+- `resourceName` (required)
+- `localPort` (required)
+- `targetPort` (required)
+- `namespace`
+
+**Read-only**: No (starts process)
+
+## stop_port_forward
+**Description**: Stop a running port-forward session.
+
+**Usage**: Clean up forwarding.
+
+**Key Parameters**:
+- `id` (required)
+
+**Read-only**: No
+
+## exec_in_pod
+**Description**: Execute a command inside a pod/container (secure, no shell interpretation).
+
+**Usage**: Run diagnostics or scripts in containers.
+
+**Key Parameters**:
+- `name` (required)
+- `command` (required: array of strings)
+- `namespace` (default: "default")
+- `container`, `timeout`
+
+**Read-only**: Mixed (depends on command)
+
+## list_api_resources
+**Description**: List available API resources on the cluster.
+
+**Usage**: Discover supported resource types.
+
+**Key Parameters**:
+- `apiGroup`, `namespaced`, `verbs`, `output`
+
+**Read-only**: Yes
+
+## ping
+**Description**: Verify connection to the agent is alive.
+
+**Usage**: Health check.
+
+**Key Parameters**: None
+
+**Read-only**: Yes

@@ -1,0 +1,118 @@
+{
+  "app.py": {
+    "filename": "app.py",
+    "path": "app.py",
+    "version": "1.1",
+    "chunks": {
+      "c9f9fa": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766503601,
+        "hash": "e1323613",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "lines": {
+      "0": {
+        "chunkId": "c9f9fa",
+        "hash": "acba5f1c",
+        "encoded": "#!/usr/bin/env%20python3",
+        "prevChunkIds": []
+      },
+      "1": {
+        "chunkId": "c9f9fa",
+        "hash": "d0540184",
+        "encoded": "%22%22%22",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "c9f9fa",
+        "hash": "f62abf3d",
+        "encoded": "Streamlit%20App%20Entry%20Point%20for%20LangGraph%20AgenticAI",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "c9f9fa",
+        "hash": "f4c8a895",
+        "encoded": "This%20file%20serves%20as%20the%20main%20entry%20point%20for%20running%20the%20application",
+        "prevChunkIds": []
+      },
+      "5": {
+        "chunkId": "c9f9fa",
+        "hash": "2ea7bbee",
+        "encoded": "via%20Streamlit%20GUI.%20It%20provides%20an%20easy%20way%20to%20launch%20the%20Streamlit",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "c9f9fa",
+        "hash": "154362f3",
+        "encoded": "interface%20without%20using%20the%20--no-ui%20flag.",
+        "prevChunkIds": []
+      },
+      "8": {
+        "chunkId": "c9f9fa",
+        "hash": "75ef9e7a",
+        "encoded": "Usage:",
+        "prevChunkIds": []
+      },
+      "9": {
+        "chunkId": "c9f9fa",
+        "hash": "e3450356",
+        "encoded": "streamlit%20run%20app.py",
+        "prevChunkIds": []
+      },
+      "10": {
+        "chunkId": "c9f9fa",
+        "hash": "7a530b09",
+        "encoded": "%22%22%22",
+        "prevChunkIds": []
+      },
+      "12": {
+        "chunkId": "c9f9fa",
+        "hash": "1632c868",
+        "encoded": "import%20asyncio",
+        "prevChunkIds": []
+      },
+      "13": {
+        "chunkId": "c9f9fa",
+        "hash": "22d3fc61",
+        "encoded": "import%20sys",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "c9f9fa",
+        "hash": "26aa725c",
+        "encoded": "import%20os",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "c9f9fa",
+        "hash": "ecda7aaf",
+        "encoded": "#%20Add%20the%20src%20directory%20to%20the%20Python%20path",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "c9f9fa",
+        "hash": "82a2f1ad",
+        "encoded": "sys.path.insert(0,%20os.path.dirname(os.path.abspath(__file__)))",
+        "prevChunkIds": []
+      },
+      "21": {
+        "chunkId": "c9f9fa",
+        "hash": "6f9020c8",
+        "encoded": "if%20__name__%20==%20%22__main__%22:",
+        "prevChunkIds": []
+      },
+      "22": {
+        "chunkId": "c9f9fa",
+        "hash": "a9481016",
+        "encoded": "#%20Run%20the%20Streamlit%20application",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

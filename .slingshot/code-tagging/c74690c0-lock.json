@@ -1,0 +1,244 @@
+{
+  "Users/rohkumar46/chatbot-web/src/langgraphagenticai/utils/cli_output_formatter.py": {
+    "f": "cli_output_formatter.py",
+    "p": "Users/rohkumar46/chatbot-web/src/langgraphagenticai/utils/cli_output_formatter.py",
+    "v": "v1",
+    "c": {
+      "e9a032": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766493157,
+        "hash": "543c4cd0",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentEditTool"
+      }
+    },
+    "l": {
+      "19": {
+        "chunkId": "e9a032",
+        "hash": "277098b0",
+        "encoded": "def%20process_event(self,%20event:%20Dict%5Bstr,%20Any%5D)%20-%3E%20str:",
+        "prevChunkIds": []
+      },
+      "20": {
+        "chunkId": "e9a032",
+        "hash": "29fbc03b",
+        "encoded": "%22%22%22Process%20a%20single%20event%20and%20return%20formatted%20output%20if%20needed.",
+        "prevChunkIds": []
+      },
+      "22": {
+        "chunkId": "e9a032",
+        "hash": "ce903cea",
+        "encoded": "Args:",
+        "prevChunkIds": []
+      },
+      "23": {
+        "chunkId": "e9a032",
+        "hash": "09f2def4",
+        "encoded": "event:%20The%20event%20dictionary%20from%20LangGraph",
+        "prevChunkIds": []
+      },
+      "25": {
+        "chunkId": "e9a032",
+        "hash": "038a8448",
+        "encoded": "Returns:",
+        "prevChunkIds": []
+      },
+      "26": {
+        "chunkId": "e9a032",
+        "hash": "c3381b4a",
+        "encoded": "Formatted%20string%20to%20display,%20or%20empty%20string%20if%20nothing%20to%20show",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "e9a032",
+        "hash": "5fd70038",
+        "encoded": "%22%22%22",
+        "prevChunkIds": []
+      },
+      "28": {
+        "chunkId": "e9a032",
+        "hash": "e3dc309a",
+        "encoded": "#%20Store%20all%20events%20for%20raw%20output%20if%20needed",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "e9a032",
+        "hash": "250797e8",
+        "encoded": "self.all_events.append(event)",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "e9a032",
+        "hash": "b6403ee0",
+        "encoded": "output%20=%20%22%22",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "e9a032",
+        "hash": "013031e7",
+        "encoded": "#%20Check%20for%20chatbot%20messages",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "e9a032",
+        "hash": "10eb7018",
+        "encoded": "if%20%22chatbot%22%20in%20event%20and%20%22messages%22%20in%20event%5B%22chatbot%22%5D:",
+        "prevChunkIds": []
+      },
+      "35": {
+        "chunkId": "e9a032",
+        "hash": "8585fe3f",
+        "encoded": "messages%20=%20event%5B%22chatbot%22%5D%5B%22messages%22%5D",
+        "prevChunkIds": []
+      },
+      "36": {
+        "chunkId": "e9a032",
+        "hash": "40c37d53",
+        "encoded": "for%20message%20in%20messages:",
+        "prevChunkIds": []
+      },
+      "37": {
+        "chunkId": "e9a032",
+        "hash": "b685dd3e",
+        "encoded": "#%20Extract%20content%20from%20AIMessage",
+        "prevChunkIds": []
+      },
+      "38": {
+        "chunkId": "e9a032",
+        "hash": "cc2106f3",
+        "encoded": "if%20hasattr(message,%20%22content%22)%20and%20message.content:",
+        "prevChunkIds": []
+      },
+      "39": {
+        "chunkId": "e9a032",
+        "hash": "049c90ac",
+        "encoded": "content%20=%20message.content",
+        "prevChunkIds": []
+      },
+      "40": {
+        "chunkId": "e9a032",
+        "hash": "9650f831",
+        "encoded": "if%20content:%20%20#%20Save%20any%20non-empty%20content",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "e9a032",
+        "hash": "0b943197",
+        "encoded": "self.final_message%20=%20content",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "e9a032",
+        "hash": "d05b0e74",
+        "encoded": "#%20Check%20for%20tool%20messages",
+        "prevChunkIds": []
+      },
+      "44": {
+        "chunkId": "e9a032",
+        "hash": "87629500",
+        "encoded": "if%20%22tools%22%20in%20event%20and%20%22messages%22%20in%20event%5B%22tools%22%5D:",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "e9a032",
+        "hash": "42afda6b",
+        "encoded": "messages%20=%20event%5B%22tools%22%5D%5B%22messages%22%5D",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "e9a032",
+        "hash": "d72ce74f",
+        "encoded": "for%20message%20in%20messages:",
+        "prevChunkIds": []
+      },
+      "47": {
+        "chunkId": "e9a032",
+        "hash": "9df04957",
+        "encoded": "if%20hasattr(message,%20%22content%22)%20and%20message.content:",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "e9a032",
+        "hash": "c2491c6a",
+        "encoded": "#%20Tool%20messages%20contain%20list%20of%20content%20items",
+        "prevChunkIds": []
+      },
+      "49": {
+        "chunkId": "e9a032",
+        "hash": "d43a30bd",
+        "encoded": "if%20isinstance(message.content,%20list):",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "e9a032",
+        "hash": "ccc1e312",
+        "encoded": "for%20content_item%20in%20message.content:",
+        "prevChunkIds": []
+      },
+      "51": {
+        "chunkId": "e9a032",
+        "hash": "6f23c2c1",
+        "encoded": "if%20isinstance(content_item,%20dict)%20and%20%22text%22%20in%20content_item:",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "e9a032",
+        "hash": "6c357db7",
+        "encoded": "try:",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "e9a032",
+        "hash": "28394031",
+        "encoded": "#%20Parse%20JSON%20content%20from%20tools",
+        "prevChunkIds": []
+      },
+      "54": {
+        "chunkId": "e9a032",
+        "hash": "1cc93cc0",
+        "encoded": "tool_data%20=%20json.loads(content_item%5B%22text%22%5D)",
+        "prevChunkIds": []
+      },
+      "55": {
+        "chunkId": "e9a032",
+        "hash": "a952a0a4",
+        "encoded": "#%20Store%20the%20full%20tool%20result%20with%20output",
+        "prevChunkIds": []
+      },
+      "56": {
+        "chunkId": "e9a032",
+        "hash": "5a8e8efc",
+        "encoded": "self.tool_results.append(%7B%22output%22:%20content_item%5B%22text%22%5D%7D)",
+        "prevChunkIds": []
+      },
+      "57": {
+        "chunkId": "e9a032",
+        "hash": "a7ef83e1",
+        "encoded": "except%20json.JSONDecodeError:",
+        "prevChunkIds": []
+      },
+      "58": {
+        "chunkId": "e9a032",
+        "hash": "b8bd827a",
+        "encoded": "#%20If%20not%20JSON,%20store%20as%20plain%20text",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "e9a032",
+        "hash": "05d51df3",
+        "encoded": "self.tool_results.append(%7B%22output%22:%20content_item%5B%22text%22%5D%7D)",
+        "prevChunkIds": []
+      },
+      "61": {
+        "chunkId": "e9a032",
+        "hash": "4ac9adb8",
+        "encoded": "return%20output",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

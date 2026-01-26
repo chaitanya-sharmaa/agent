@@ -1,0 +1,68 @@
+# Workflow Settings Configuration
+# Define workflow behavior, UI options, and flow control
+
+workflow_settings:
+  default_workflow: "auditor"
+  
+  # Available workflows to show in UI and CLI
+  available_workflows:
+    - id: "auditor"
+      name: "Zero Trust Auditor"
+      description: "Analyze Kubernetes cluster for security posture"
+      icon: "🔐"
+      enabled: true
+      
+    - id: "creator"
+      name: "Zero Trust Creator"
+      description: "Deploy security policies to cluster"
+      icon: "🚀"
+      enabled: true
+
+    - id: "comprehensive_auditor"
+      name: "Comprehensive Security Auditor"
+      description: "Deep analysis of all namespaces, resources, security issues, compliance, and recommendations"
+      icon: "🔍"
+      enabled: true
+
+# LLM Configuration
+llm:
+  provider: "ollama"
+  endpoint: "http://localhost:11434"
+  model: "mistral:latest"
+  temperature: 0.3
+  max_tokens: 2000
+  timeout_seconds: 60
+
+# Graph Execution Settings
+graph:
+  max_events: 200
+  recursion_limit: 50
+  
+  # Early stopping conditions
+  early_stop:
+    # For auditor: stop when we've gathered required probes
+    auditor_probes: ["namespaces", "pods", "daemonsets", "peerauthentication", "authorizationpolicy", "networkpolicy"]
+    
+    # For creator: stop when deployment tools are executed
+    creator_tools: ["upgrade_helm_chart", "install_helm_chart"]
+
+# CLI Display Settings
+cli:
+  show_raw_output: false
+  show_formatted_output: true
+  progress_indicators: true
+
+# UI Settings (Streamlit)
+ui:
+  port: 8501
+  title: "Zero Trust Security Auditor & Creator"
+  show_debug_panels: true
+  live_log_lines: 20
+  
+  # Define which panels to show
+  panels:
+    metrics: true
+    live_logs: true
+    tool_outputs: true
+    raw_results: true
+    debug_info: true

@@ -1,0 +1,472 @@
+{
+  "HELM_DEPLOYMENT_FIX_SUMMARY.md": {
+    "f": "HELM_DEPLOYMENT_FIX_SUMMARY.md",
+    "p": "HELM_DEPLOYMENT_FIX_SUMMARY.md",
+    "v": "v1",
+    "c": {
+      "698bd5": {
+        "user": "Rohtash Kumar",
+        "model": "claude-opus-4@20250514",
+        "extraContext": "tbd",
+        "timestamp": 1766653128,
+        "hash": "9a9082af",
+        "messageId": null,
+        "codeBlockId": null,
+        "isActive": true,
+        "type": "agentWriteTool"
+      }
+    },
+    "l": {
+      "0": {
+        "chunkId": "698bd5",
+        "hash": "b91fecc0",
+        "encoded": "#%20Helm%20Deployment%20Fix%20Summary",
+        "prevChunkIds": []
+      },
+      "2": {
+        "chunkId": "698bd5",
+        "hash": "7939cef3",
+        "encoded": "##%20Issue%20Identified",
+        "prevChunkIds": []
+      },
+      "4": {
+        "chunkId": "698bd5",
+        "hash": "3406ef83",
+        "encoded": "The%20Zero%20Trust%20Creator%20mode%20was%20not%20deploying%20Helm%20charts%20because:",
+        "prevChunkIds": []
+      },
+      "5": {
+        "chunkId": "698bd5",
+        "hash": "0e354a16",
+        "encoded": "1.%20The%20CREATOR_PROMPT%20wasn't%20explicit%20enough%20about%20calling%20the%20%60helm_install%60%20tool",
+        "prevChunkIds": []
+      },
+      "6": {
+        "chunkId": "698bd5",
+        "hash": "53332e1e",
+        "encoded": "2.%20The%20tool%20call%20extraction%20logic%20wasn't%20properly%20parsing%20helm_install%20function%20calls",
+        "prevChunkIds": []
+      },
+      "7": {
+        "chunkId": "698bd5",
+        "hash": "ddc68db6",
+        "encoded": "3.%20The%20prompt%20format%20didn't%20match%20what%20the%20LLM%20was%20generating",
+        "prevChunkIds": []
+      },
+      "9": {
+        "chunkId": "698bd5",
+        "hash": "ec34edef",
+        "encoded": "##%20Fixes%20Applied",
+        "prevChunkIds": []
+      },
+      "11": {
+        "chunkId": "698bd5",
+        "hash": "3e80b14c",
+        "encoded": "###%201.%20Updated%20CREATOR_PROMPT%20in%20prompts.py",
+        "prevChunkIds": []
+      },
+      "13": {
+        "chunkId": "698bd5",
+        "hash": "b50a3e7f",
+        "encoded": "Changed%20the%20prompt%20to%20be%20more%20explicit%20about%20calling%20helm_install%20with%20function%20syntax:",
+        "prevChunkIds": []
+      },
+      "14": {
+        "chunkId": "698bd5",
+        "hash": "c8f81dbd",
+        "encoded": "%60%60%60python",
+        "prevChunkIds": []
+      },
+      "15": {
+        "chunkId": "698bd5",
+        "hash": "44da6701",
+        "encoded": "helm_install(",
+        "prevChunkIds": []
+      },
+      "16": {
+        "chunkId": "698bd5",
+        "hash": "be09e82b",
+        "encoded": "releaseName=%22auth-policy-&lt;namespace&gt;%22,",
+        "prevChunkIds": []
+      },
+      "17": {
+        "chunkId": "698bd5",
+        "hash": "8ee4b3dd",
+        "encoded": "chart=%22./src/charts/authorization-policy%22,",
+        "prevChunkIds": []
+      },
+      "18": {
+        "chunkId": "698bd5",
+        "hash": "9bd88562",
+        "encoded": "namespace=%22&lt;namespace&gt;%22,",
+        "prevChunkIds": []
+      },
+      "19": {
+        "chunkId": "698bd5",
+        "hash": "2281a587",
+        "encoded": "values=%7B...%7D",
+        "prevChunkIds": []
+      },
+      "20": {
+        "chunkId": "698bd5",
+        "hash": "35725881",
+        "encoded": ")",
+        "prevChunkIds": []
+      },
+      "21": {
+        "chunkId": "698bd5",
+        "hash": "aeb267a2",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "23": {
+        "chunkId": "698bd5",
+        "hash": "13d98e1e",
+        "encoded": "###%202.%20Enhanced%20Tool%20Extraction%20in%20chatbot_with_Tool_node.py",
+        "prevChunkIds": []
+      },
+      "25": {
+        "chunkId": "698bd5",
+        "hash": "42e9ca5a",
+        "encoded": "Improved%20the%20%60extract_and_create_tool_calls%60%20method%20to:",
+        "prevChunkIds": []
+      },
+      "26": {
+        "chunkId": "698bd5",
+        "hash": "02cd2407",
+        "encoded": "-%20Parse%20helm_install%20function%20calls%20from%20the%20LLM%20output",
+        "prevChunkIds": []
+      },
+      "27": {
+        "chunkId": "698bd5",
+        "hash": "54af1e42",
+        "encoded": "-%20Extract%20all%20parameters%20(releaseName,%20chart,%20namespace,%20values)",
+        "prevChunkIds": []
+      },
+      "28": {
+        "chunkId": "698bd5",
+        "hash": "dee13c85",
+        "encoded": "-%20Handle%20both%20JSON%20format%20and%20function%20call%20format",
+        "prevChunkIds": []
+      },
+      "29": {
+        "chunkId": "698bd5",
+        "hash": "020e8eb9",
+        "encoded": "-%20Provide%20default%20values%20for%20authorization%20and%20network%20policies",
+        "prevChunkIds": []
+      },
+      "31": {
+        "chunkId": "698bd5",
+        "hash": "1b0a656d",
+        "encoded": "###%203.%20Added%20Logging",
+        "prevChunkIds": []
+      },
+      "33": {
+        "chunkId": "698bd5",
+        "hash": "fda7ae37",
+        "encoded": "Added%20print%20statements%20to%20track:",
+        "prevChunkIds": []
+      },
+      "34": {
+        "chunkId": "698bd5",
+        "hash": "154ec5ff",
+        "encoded": "-%20When%20helm_install%20calls%20are%20extracted",
+        "prevChunkIds": []
+      },
+      "35": {
+        "chunkId": "698bd5",
+        "hash": "74e9ec31",
+        "encoded": "-%20The%20namespace%20and%20release%20name%20for%20each%20deployment",
+        "prevChunkIds": []
+      },
+      "36": {
+        "chunkId": "698bd5",
+        "hash": "e298e9e9",
+        "encoded": "-%20Any%20parsing%20errors",
+        "prevChunkIds": []
+      },
+      "38": {
+        "chunkId": "698bd5",
+        "hash": "10594c84",
+        "encoded": "##%20How%20It%20Works%20Now",
+        "prevChunkIds": []
+      },
+      "40": {
+        "chunkId": "698bd5",
+        "hash": "38595a62",
+        "encoded": "1.%20**Audit%20Phase**:%20The%20Creator%20first%20checks%20existing%20resources:",
+        "prevChunkIds": []
+      },
+      "41": {
+        "chunkId": "698bd5",
+        "hash": "2b8f7c01",
+        "encoded": "-%20Gets%20all%20namespaces",
+        "prevChunkIds": []
+      },
+      "42": {
+        "chunkId": "698bd5",
+        "hash": "0f1370ef",
+        "encoded": "-%20Checks%20existing%20authorization%20policies",
+        "prevChunkIds": []
+      },
+      "43": {
+        "chunkId": "698bd5",
+        "hash": "9886f2cc",
+        "encoded": "-%20Checks%20existing%20network%20policies",
+        "prevChunkIds": []
+      },
+      "45": {
+        "chunkId": "698bd5",
+        "hash": "255e8673",
+        "encoded": "2.%20**Deployment%20Phase**:%20For%20each%20user%20namespace%20(excluding%20system%20namespaces):",
+        "prevChunkIds": []
+      },
+      "46": {
+        "chunkId": "698bd5",
+        "hash": "dd612c9c",
+        "encoded": "-%20Deploys%20authorization%20policy%20using%20%60helm_install%60",
+        "prevChunkIds": []
+      },
+      "47": {
+        "chunkId": "698bd5",
+        "hash": "1656ad9e",
+        "encoded": "-%20Deploys%20network%20policy%20using%20%60helm_install%60",
+        "prevChunkIds": []
+      },
+      "48": {
+        "chunkId": "698bd5",
+        "hash": "0d870573",
+        "encoded": "-%20Each%20deployment%20has%20unique%20release%20names%20(e.g.,%20auth-policy-default,%20netpol-default)",
+        "prevChunkIds": []
+      },
+      "50": {
+        "chunkId": "698bd5",
+        "hash": "b87f4bf5",
+        "encoded": "3.%20**Verification%20Phase**:%20After%20deployment:",
+        "prevChunkIds": []
+      },
+      "51": {
+        "chunkId": "698bd5",
+        "hash": "aa381860",
+        "encoded": "-%20Rechecks%20authorization%20policies",
+        "prevChunkIds": []
+      },
+      "52": {
+        "chunkId": "698bd5",
+        "hash": "16ef5922",
+        "encoded": "-%20Rechecks%20network%20policies",
+        "prevChunkIds": []
+      },
+      "53": {
+        "chunkId": "698bd5",
+        "hash": "aaa30992",
+        "encoded": "-%20Reports%20deployment%20summary",
+        "prevChunkIds": []
+      },
+      "55": {
+        "chunkId": "698bd5",
+        "hash": "a66e01f9",
+        "encoded": "##%20Testing",
+        "prevChunkIds": []
+      },
+      "57": {
+        "chunkId": "698bd5",
+        "hash": "1f001e2f",
+        "encoded": "Run%20the%20test%20script%20to%20verify%20helm_install%20calls:",
+        "prevChunkIds": []
+      },
+      "58": {
+        "chunkId": "698bd5",
+        "hash": "c4b13717",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "59": {
+        "chunkId": "698bd5",
+        "hash": "857573cc",
+        "encoded": "python%20test_helm_deployment.py",
+        "prevChunkIds": []
+      },
+      "60": {
+        "chunkId": "698bd5",
+        "hash": "4b176361",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "62": {
+        "chunkId": "698bd5",
+        "hash": "bf570e12",
+        "encoded": "Or%20run%20the%20full%20application:",
+        "prevChunkIds": []
+      },
+      "63": {
+        "chunkId": "698bd5",
+        "hash": "d17a2743",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "64": {
+        "chunkId": "698bd5",
+        "hash": "b173e9dd",
+        "encoded": "python%20-m%20src.langgraphagenticai.main%20--no-ui",
+        "prevChunkIds": []
+      },
+      "65": {
+        "chunkId": "698bd5",
+        "hash": "2afc272c",
+        "encoded": "#%20Select%20%22Zero%20Trust%20Creator%22",
+        "prevChunkIds": []
+      },
+      "66": {
+        "chunkId": "698bd5",
+        "hash": "7b8bac46",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "68": {
+        "chunkId": "698bd5",
+        "hash": "c54828b3",
+        "encoded": "##%20Expected%20Behavior",
+        "prevChunkIds": []
+      },
+      "70": {
+        "chunkId": "698bd5",
+        "hash": "661b9a15",
+        "encoded": "When%20running%20Zero%20Trust%20Creator,%20you%20should%20see:",
+        "prevChunkIds": []
+      },
+      "71": {
+        "chunkId": "698bd5",
+        "hash": "97604a14",
+        "encoded": "1.%20kubectl_get%20calls%20to%20audit%20existing%20resources",
+        "prevChunkIds": []
+      },
+      "72": {
+        "chunkId": "698bd5",
+        "hash": "444e0372",
+        "encoded": "2.%20helm_install%20calls%20for%20each%20user%20namespace:",
+        "prevChunkIds": []
+      },
+      "73": {
+        "chunkId": "698bd5",
+        "hash": "c60c2db3",
+        "encoded": "-%20auth-policy-default%20-&gt;%20default%20namespace",
+        "prevChunkIds": []
+      },
+      "74": {
+        "chunkId": "698bd5",
+        "hash": "679cf04e",
+        "encoded": "-%20netpol-default%20-&gt;%20default%20namespace",
+        "prevChunkIds": []
+      },
+      "75": {
+        "chunkId": "698bd5",
+        "hash": "b47c1b71",
+        "encoded": "-%20auth-policy-mcp-server%20-&gt;%20mcp-server%20namespace",
+        "prevChunkIds": []
+      },
+      "76": {
+        "chunkId": "698bd5",
+        "hash": "17066d82",
+        "encoded": "-%20netpol-mcp-server%20-&gt;%20mcp-server%20namespace",
+        "prevChunkIds": []
+      },
+      "77": {
+        "chunkId": "698bd5",
+        "hash": "931fa288",
+        "encoded": "3.%20Verification%20kubectl_get%20calls",
+        "prevChunkIds": []
+      },
+      "78": {
+        "chunkId": "698bd5",
+        "hash": "0563e9f3",
+        "encoded": "4.%20Summary%20report%20of%20deployments",
+        "prevChunkIds": []
+      },
+      "80": {
+        "chunkId": "698bd5",
+        "hash": "478884d5",
+        "encoded": "##%20Verification",
+        "prevChunkIds": []
+      },
+      "82": {
+        "chunkId": "698bd5",
+        "hash": "a54b4863",
+        "encoded": "After%20running,%20check%20deployments:",
+        "prevChunkIds": []
+      },
+      "83": {
+        "chunkId": "698bd5",
+        "hash": "d6a77c6f",
+        "encoded": "%60%60%60bash",
+        "prevChunkIds": []
+      },
+      "84": {
+        "chunkId": "698bd5",
+        "hash": "4d82e0ab",
+        "encoded": "#%20Check%20Helm%20releases",
+        "prevChunkIds": []
+      },
+      "85": {
+        "chunkId": "698bd5",
+        "hash": "db432c6b",
+        "encoded": "helm%20list%20-A%20%7C%20grep%20-E%20%22auth-policy%7Cnetpol%22",
+        "prevChunkIds": []
+      },
+      "87": {
+        "chunkId": "698bd5",
+        "hash": "2eed927b",
+        "encoded": "#%20Check%20deployed%20policies",
+        "prevChunkIds": []
+      },
+      "88": {
+        "chunkId": "698bd5",
+        "hash": "8d69f134",
+        "encoded": "kubectl%20get%20authorizationpolicy,networkpolicy%20-A",
+        "prevChunkIds": []
+      },
+      "89": {
+        "chunkId": "698bd5",
+        "hash": "f9db9798",
+        "encoded": "%60%60%60",
+        "prevChunkIds": []
+      },
+      "91": {
+        "chunkId": "698bd5",
+        "hash": "f4f1247b",
+        "encoded": "##%20Key%20Changes%20Summary",
+        "prevChunkIds": []
+      },
+      "93": {
+        "chunkId": "698bd5",
+        "hash": "5713ac06",
+        "encoded": "1.%20**Prompt**:%20More%20explicit%20helm_install%20function%20call%20syntax",
+        "prevChunkIds": []
+      },
+      "94": {
+        "chunkId": "698bd5",
+        "hash": "4112abf7",
+        "encoded": "2.%20**Tool%20Extraction**:%20Better%20parsing%20of%20helm_install%20calls%20from%20LLM%20output",
+        "prevChunkIds": []
+      },
+      "95": {
+        "chunkId": "698bd5",
+        "hash": "ca75a68d",
+        "encoded": "3.%20**Logging**:%20Added%20visibility%20into%20tool%20call%20extraction",
+        "prevChunkIds": []
+      },
+      "96": {
+        "chunkId": "698bd5",
+        "hash": "37464193",
+        "encoded": "4.%20**Test%20Script**:%20Created%20test_helm_deployment.py%20for%20verification",
+        "prevChunkIds": []
+      },
+      "98": {
+        "chunkId": "698bd5",
+        "hash": "d3210025",
+        "encoded": "The%20system%20now%20properly%20extracts%20and%20executes%20helm_install%20tool%20calls%20when%20in%20Zero%20Trust%20Creator%20mode.",
+        "prevChunkIds": []
+      }
+    }
+  }
+}

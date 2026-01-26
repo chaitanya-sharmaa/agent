@@ -1,0 +1,137 @@
+---
+# Source: mcp-server-kubernetes/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-server-k8s-mcp-server-kubernetes
+  labels:
+    helm.sh/chart: mcp-server-kubernetes-2.8.0
+    app.kubernetes.io/name: mcp-server-kubernetes
+    app.kubernetes.io/instance: mcp-server-k8s
+    app.kubernetes.io/version: "2.8.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+
+---
+# Source: mcp-server-kubernetes/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-server-k8s-mcp-server-kubernetes
+  labels:
+    helm.sh/chart: mcp-server-kubernetes-2.8.0
+    app.kubernetes.io/name: mcp-server-kubernetes
+    app.kubernetes.io/instance: mcp-server-k8s
+    app.kubernetes.io/version: "2.8.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  # name: mcp-server-k8s-mcp-server-kubernetes
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: mcp-server-k8s-mcp-server-kubernetes
+  namespace: mcpserver
+---
+# Source: mcp-server-kubernetes/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server-k8s-mcp-server-kubernetes
+  labels:
+    helm.sh/chart: mcp-server-kubernetes-2.8.0
+    app.kubernetes.io/name: mcp-server-kubernetes
+    app.kubernetes.io/instance: mcp-server-k8s
+    app.kubernetes.io/version: "2.8.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  # type: ClusterIP
+  type: LoadBalancer
+  ports:
+  - port: 3001
+    targetPort: 3001
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: mcp-server-kubernetes
+    app.kubernetes.io/instance: mcp-server-k8s
+---
+# Source: mcp-server-kubernetes/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server-k8s-mcp-server-kubernetes
+  labels:
+    krupesh: "false"
+    helm.sh/chart: mcp-server-kubernetes-2.8.0
+    app.kubernetes.io/name: mcp-server-kubernetes
+    app.kubernetes.io/instance: mcp-server-k8s
+    app.kubernetes.io/version: "2.8.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-server-kubernetes
+      app.kubernetes.io/instance: mcp-server-k8s
+  template:
+    metadata:
+      annotations:
+        checksum/config: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      labels:
+        helm.sh/chart: mcp-server-kubernetes-2.8.0
+        app.kubernetes.io/name: mcp-server-kubernetes
+        app.kubernetes.io/instance: mcp-server-k8s
+        app.kubernetes.io/version: "2.8.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: mcp-server-k8s-mcp-server-kubernetes
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: mcp-server
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "flux159/mcp-server-kubernetes:latest"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 3001
+          protocol: TCP
+        env:
+        # Transport configuration
+        - name: ENABLE_UNSAFE_STREAMABLE_HTTP_TRANSPORT
+          value: "true"
+        - name: PORT
+          value: "3001"
+        - name: HOST
+          value: "0.0.0.0"
+
+        # Security configuration
+        - name: ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS
+          value: "true"
+        # Kubeconfig configuration
+
+        # Additional environment variables
+        volumeMounts:
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+---
+
+
+#

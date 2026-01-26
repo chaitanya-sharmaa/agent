@@ -1,0 +1,39 @@
+# Example: AWS Security Auditor Configuration
+# Copy this to config/mcp.yaml and customize for AWS MCP server
+
+server:
+  host: "localhost"
+  port: 5001
+  timeout_seconds: 30
+  retry_attempts: 3
+
+tools:
+  - name: "aws_list_buckets"
+    description: "List all S3 buckets"
+    
+  - name: "aws_list_iam_users"
+    description: "List IAM users"
+    
+  - name: "aws_describe_security_groups"
+    description: "Describe EC2 security groups"
+    
+  - name: "aws_check_iam_policies"
+    description: "Check IAM policy compliance"
+    
+  - name: "aws_describe_instances"
+    description: "Describe EC2 instances"
+    
+  - name: "aws_get_vpc_info"
+    description: "Get VPC configuration"
+    
+  - name: "aws_list_rds_instances"
+    description: "List RDS database instances"
+    
+  - name: "aws_check_encryption"
+    description: "Check encryption status of resources"
+    
+  - name: "aws_audit_access_logs"
+    description: "Audit access logs configuration"
+    
+  - name: "aws_check_compliance"
+    description: "Check compliance status"
