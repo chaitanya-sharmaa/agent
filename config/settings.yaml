@@ -2,27 +2,26 @@
 # Define workflow behavior, UI options, and flow control
 
 workflow_settings:
-  default_workflow: "auditor"
+  default_workflow: "comprehensive_auditor"
   
   # Available workflows to show in UI and CLI
   available_workflows:
-    - id: "auditor"
-      name: "Zero Trust Auditor"
-      description: "Analyze Kubernetes cluster for security posture"
-      icon: "🔐"
+    - id: "comprehensive_auditor"
+      name: "Comprehensive Security Auditor"
+      description: "Deep analysis of all namespaces, resources, security issues, compliance, and recommendations"
+      icon: "🔍"
       enabled: true
-      
+
     - id: "creator"
       name: "Zero Trust Creator"
       description: "Deploy security policies to cluster"
       icon: "🚀"
       enabled: true
 
-    - id: "comprehensive_auditor"
-      name: "Comprehensive Security Auditor"
-      description: "Deep analysis of all namespaces, resources, security issues, compliance, and recommendations"
-      icon: "🔍"
-      enabled: true
+# Execution Engine Selection
+# Choose between "langgraph" (default, optimized for agentic patterns)
+# or "crew_ai" (multi-agent orchestration via Crew AI)
+execution_engine: "langgraph"
 
 # LLM Configuration
 llm:
@@ -33,6 +32,72 @@ llm:
   max_tokens: 2000
   timeout_seconds: 60
 
+# Crew AI Configuration (only used if execution_engine == "crew_ai")
+crew_ai:
+  # Master agent settings (coordinates other agents)
+  master_agent:
+    role: "Security Audit Coordinator"
+    goal: "Coordinate comprehensive security audits of Kubernetes clusters"
+    backstory: "Expert security orchestrator with deep Kubernetes knowledge. Coordinates specialized agents to deliver thorough assessments."
+  
+  # Specialized agents for multi-agent collaboration
+  specialized_agents:
+    - id: "data_collector"
+      role: "Data Collection Agent"
+      goal: "Gather comprehensive Kubernetes cluster data and resource information"
+      backstory: "Specialist in Kubernetes API interactions. Methodical at collecting all relevant cluster resources, namespaces, pods, deployments, and configurations using kubectl tools."
+      enabled: true
+    
+    - id: "security_analyzer"
+      role: "Security Analysis Agent"
+      goal: "Identify security misconfigurations and vulnerabilities in Kubernetes clusters"
+      backstory: "Security engineer specialized in Kubernetes hardening. Expert at identifying privilege escalation risks, insecure defaults, missing security contexts, and network exposure."
+      enabled: true
+    
+    - id: "compliance_checker"
+      role: "Enterprise Compliance & Risk Assessment Agent"
+      goal: |
+        Verify cluster compliance with industry security standards (NIST SP 800-190, CIS Kubernetes Benchmark, NSA/CISA guidelines, SOC 2, PCI-DSS, ISO 27001).
+        Assess risk severity and business impact. Verify production readiness across security, reliability, scalability, and operational excellence.
+        Identify control gaps and map violations to specific regulatory requirements.
+      backstory: |
+        Senior compliance auditor and security architect with expertise in:
+        • Security frameworks: NIST SP 800-190 (container security), CIS Kubernetes Benchmark (95 controls), NSA/CISA Kubernetes hardening, 
+          OWASP Top 10 for Cloud Native, SOC 2 Type II, PCI-DSS 3.2.1, ISO 27001
+        • Risk assessment: CVSS scoring, threat modeling, impact analysis (confidentiality/integrity/availability)
+        • Production readiness: High availability, disaster recovery (RTO/RPO), scaling policies, resource management, observability
+        • Enterprise security: Zero trust architecture, defense-in-depth, least privilege, supply chain security
+        • Regulatory mapping: Maps findings to controls in NIST, CIS, PCI, HIPAA, GDPR, FISMA, FedRAMP compliance frameworks
+        
+        Expertise in evaluating:
+        - Network boundaries and segmentation (network policies, egress control, API protection)
+        - Identity & access control (RBAC, service accounts, admission controllers)
+        - Data protection (encryption at rest/transit, secret management, backup strategies)
+        - Container security (image scanning, runtime security, pod security policies)
+        - Incident response readiness and log aggregation
+        - Cluster hardening and system component security
+        - Third-party integration risks and supply chain security
+        
+        Provides risk ratings: CRITICAL (immediate breach risk), HIGH (significant vulnerability <30 days), MEDIUM (address within 90 days), LOW (improvement)
+        Assesses production readiness: fully production-ready, production-ready with mitigations, or requires remediation before production
+      enabled: true
+    
+    - id: "policy_creator"
+      role: "Policy Creation Agent"
+      goal: "Create remediation policies and security configurations to address audit findings"
+      backstory: "DevOps engineer expert in Kubernetes policy-as-code. Skilled at creating NetworkPolicies, PodSecurityPolicies, AuthorizationPolicies, and other security controls."
+      enabled: false  # Only enabled in creator workflow
+  
+  # Execution settings
+  max_iterations: 150  # Increased for multi-agent coordination
+  tool_budget_per_workflow:
+    comprehensive_auditor: 400  # Significantly increased for deep analysis
+    creator: 200      # Increased for policy creation
+  
+  # Delegation settings
+  delegate_to_crew: true  # ← Enable multi-agent collaboration
+  enable_memory: true     # Enable agent memory between steps
+
 # Graph Execution Settings
 graph:
   max_events: 200
@@ -40,8 +105,8 @@ graph:
   
   # Early stopping conditions
   early_stop:
-    # For auditor: stop when we've gathered required probes
-    auditor_probes: ["namespaces", "pods", "daemonsets", "peerauthentication", "authorizationpolicy", "networkpolicy"]
+    # For comprehensive audit: stop when we've gathered required probes
+    audit_probes: ["namespaces", "pods", "daemonsets", "peerauthentication", "authorizationpolicy", "networkpolicy"]
     
     # For creator: stop when deployment tools are executed
     creator_tools: ["upgrade_helm_chart", "install_helm_chart"]
@@ -66,3 +131,155 @@ ui:
     tool_outputs: true
     raw_results: true
     debug_info: true
+
+# Compliance & Risk Assessment Configuration
+# Standards and frameworks for compliance checking
+compliance:
+  # Security standards to check against
+  standards:
+    - id: "nist_sp_800_190"
+      name: "NIST SP 800-190 Container Security"
+      description: "Guidelines for container image and runtime security"
+      enabled: true
+      focus_areas:
+        - image_scanning_and_vulnerability_management
+        - container_runtime_security
+        - orchestration_security
+    
+    - id: "cis_kubernetes_benchmark"
+      name: "CIS Kubernetes Benchmark v1.8"
+      description: "95 security best practices for Kubernetes clusters"
+      enabled: true
+      version: "1.8"
+      critical_controls: 50
+      focus_areas:
+        - master_node_security
+        - worker_node_security
+        - kubernetes_policies
+        - general_settings
+    
+    - id: "nsa_cisa_hardening"
+      name: "NSA/CISA Kubernetes Hardening Guidance"
+      description: "NSA & CISA recommended Kubernetes security practices"
+      enabled: true
+      focus_areas:
+        - supply_chain_security
+        - cluster_hardening
+        - vulnerability_remediation
+        - log_and_audit_assessment
+    
+    - id: "owasp_cloud_native"
+      name: "OWASP Top 10 Cloud Native"
+      description: "Top 10 security risks specific to cloud-native applications"
+      enabled: true
+      focus_areas:
+        - insecure_cloud_infrastructure
+        - insecure_secrets_storage
+        - container_ecosystem_vulnerabilities
+        - insecure_admission_control
+    
+    - id: "pci_dss"
+      name: "PCI-DSS 3.2.1"
+      description: "Payment Card Industry Data Security Standard"
+      enabled: false  # Enable if processing payment data
+      critical_areas:
+        - network_segmentation
+        - access_control
+        - encryption
+        - monitoring
+    
+    - id: "soc2_type2"
+      name: "SOC 2 Type II"
+      description: "Service Organization Control for security, availability, processing integrity"
+      enabled: false  # Enable if SOC 2 compliance required
+      trust_principles:
+        - security
+        - availability
+        - processing_integrity
+        - confidentiality
+        - privacy
+    
+    - id: "iso_27001"
+      name: "ISO/IEC 27001:2022"
+      description: "Information security management system standard"
+      enabled: false  # Enable if ISO 27001 certification required
+      key_areas:
+        - access_control
+        - encryption
+        - incident_management
+        - business_continuity
+  
+  # Risk assessment severity levels and response times
+  risk_levels:
+    CRITICAL:
+      description: "Immediate breach risk or data exposure - requires emergency patching"
+      response_time_hours: 1
+      business_impact: "Potential complete system compromise, data breach, regulatory violation"
+      examples: 
+        - "Unauthenticated API access"
+        - "Privilege escalation vulnerabilities"
+        - "Unencrypted secrets in etcd"
+    
+    HIGH:
+      description: "Significant vulnerability enabling multiple attack vectors"
+      response_time_hours: 24
+      business_impact: "Major security control gaps, significant unauthorized access potential"
+      examples:
+        - "Missing or misconfigured network policies"
+        - "No pod security policies enforced"
+        - "Excessive RBAC permissions (overly permissive roles)"
+    
+    MEDIUM:
+      description: "Notable security weakness requiring planned remediation"
+      response_time_hours: 720  # 30 days
+      business_impact: "Security control gaps in secondary systems or with partial mitigations"
+      examples:
+        - "Missing audit logging on critical operations"
+        - "Incomplete container image vulnerability scanning"
+        - "Deprecated APIs still in use"
+    
+    LOW:
+      description: "Minor improvement for defense-in-depth or best practices"
+      response_time_hours: 2160  # 90 days
+      business_impact: "Enhancement opportunity; minimal direct security impact"
+      examples:
+        - "Resource requests/limits not defined"
+        - "Missing pod disruption budgets"
+        - "No graceful shutdown periods configured"
+  
+  # Production readiness assessment criteria
+  production_readiness:
+    security:
+      - pod_security_policies_enforced
+      - network_policies_implemented
+      - rbac_properly_configured
+      - secret_encryption_at_rest
+      - image_vulnerability_scanning
+      - admission_controllers_enabled
+      - audit_logging_enabled
+    
+    reliability:
+      - pod_disruption_budgets_defined
+      - resource_requests_limits_set
+      - health_checks_configured
+      - graceful_shutdown_periods_set
+      - persistent_storage_backup_strategy
+    
+    scalability:
+      - horizontal_pod_autoscaling_configured
+      - node_autoscaling_enabled
+      - resource_efficiency_optimized
+      - cluster_monitoring_in_place
+    
+    disaster_recovery:
+      - recovery_time_objective_met  # RTO < 1 hour
+      - recovery_point_objective_met  # RPO < 15 minutes
+      - backup_and_restore_tested
+      - failover_mechanisms_validated
+    
+    operational_excellence:
+      - comprehensive_logging_enabled
+      - metrics_and_monitoring_in_place
+      - alerting_thresholds_configured
+      - incident_response_plan_documented
+      - runbooks_and_playbooks_available

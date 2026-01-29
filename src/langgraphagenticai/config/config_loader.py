@@ -39,7 +39,7 @@ class ConfigLoader:
         if not filepath.exists():
             raise FileNotFoundError(f"Config file not found: {filepath}")
         
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f) or {}
     
     def _load_all_configs(self):
@@ -58,13 +58,26 @@ class ConfigLoader:
     def get_mcp_server(self) -> Dict[str, Any]:
         """Get MCP server connection settings"""
         return self._config_cache['mcp'].get('server', {})
+
+    def get_mcp_timeout_seconds(self) -> int:
+        """Get MCP request timeout in seconds."""
+        server = self.get_mcp_server()
+        return int(server.get('timeout_seconds', 30))
     
     def get_mcp_url(self) -> str:
-        """Get MCP server URL"""
+        """Get MCP server URL (including path if configured)."""
         server = self.get_mcp_server()
         host = server.get('host', 'localhost')
         port = server.get('port', 3001)
-        return f"http://{host}:{port}"
+        path = server.get('path', '') or ''
+        if path and not str(path).startswith('/'):
+            path = f"/{path}"
+        return f"http://{host}:{port}{path}"
+
+    def get_mcp_transport(self) -> str:
+        """Get MCP transport type."""
+        server = self.get_mcp_server()
+        return server.get('transport', 'streamable_http')
     
     def get_mcp_tools(self) -> List[Dict[str, Any]]:
         """Get list of available MCP tools"""
@@ -174,6 +187,59 @@ class ConfigLoader:
     def get_cli_settings(self) -> Dict[str, Any]:
         """Get CLI settings"""
         return self._config_cache['settings'].get('cli', {})
+    
+    # Execution Engine Configuration
+    
+    def get_execution_engine(self) -> str:
+        """Get execution engine selection (langgraph or crew_ai)."""
+        return self._config_cache['settings'].get('execution_engine', 'langgraph')
+    
+    def get_crew_ai_config(self) -> Dict[str, Any]:
+        """Get Crew AI configuration."""
+        return self._config_cache['settings'].get('crew_ai', {})
+    
+    def get_crew_ai_master_agent(self) -> Dict[str, Any]:
+        """Get Crew AI master agent configuration."""
+        crew_config = self.get_crew_ai_config()
+        return crew_config.get('master_agent', {})
+    
+    def get_crew_ai_max_iterations(self) -> int:
+        """Get Crew AI max iterations."""
+        crew_config = self.get_crew_ai_config()
+        return int(crew_config.get('max_iterations', 100))
+    
+    def get_crew_ai_tool_budget(self, workflow_id: str) -> int:
+        """Get tool budget for a specific workflow."""
+        crew_config = self.get_crew_ai_config()
+        budgets = crew_config.get('tool_budget_per_workflow', {})
+        return int(budgets.get(workflow_id, 150))
+    
+    def get_crew_ai_delegation_enabled(self) -> bool:
+        """Check if multi-agent delegation is enabled."""
+        crew_config = self.get_crew_ai_config()
+        return crew_config.get('delegate_to_crew', False)
+    
+    def get_crew_ai_memory_enabled(self) -> bool:
+        """Check if agent memory is enabled."""
+        crew_config = self.get_crew_ai_config()
+        return crew_config.get('enable_memory', False)
+    
+    def get_crew_ai_specialized_agents(self, workflow_id: str = None) -> List[Dict[str, Any]]:
+        """Get enabled specialized agents, optionally filtered by workflow."""
+        crew_config = self.get_crew_ai_config()
+        agents = crew_config.get('specialized_agents', [])
+        
+        # Filter by workflow if specified
+        if workflow_id:
+            # For creator workflow, enable policy_creator
+            # For others, disable it
+            return [
+                a for a in agents 
+                if (a.get('enabled', True) or 
+                    (workflow_id == 'creator' and a.get('id') == 'policy_creator'))
+            ]
+        
+        return [a for a in agents if a.get('enabled', True)]
     
     # Validation and Debug
     

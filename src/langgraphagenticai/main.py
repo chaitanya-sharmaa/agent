@@ -2,7 +2,7 @@
 LangGraph AgenticAI Main Application Entry Point.
 
 This module serves as the entry point for the application, supporting both
-Streamlit UI and CLI modes with Zero Trust Kubernetes auditing and deployment.
+Streamlit UI and CLI modes with Zero Trust Kubernetes security auditing and deployment.
 
 Configuration-driven: Reads workflow and MCP server settings from config/
 
@@ -13,8 +13,8 @@ Usage:
     # Run in CLI mode (no UI)
     python -m src.langgraphagenticai.main --no-ui
 
-    # Run specific usecase in CLI mode
-    python -m src.langgraphagenticai.main --no-ui auditor
+    # Run specific workflow in CLI mode
+    python -m src.langgraphagenticai.main --no-ui comprehensive_auditor
     python -m src.langgraphagenticai.main --no-ui creator
 """
 
@@ -153,7 +153,7 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     Initialize application components and run the workflow.
     
     Args:
-        usecase: The usecase to execute (auditor, creator, or custom)
+        usecase: The workflow to execute (comprehensive_auditor or creator)
         config: Configuration loader instance
         
     Raises:
@@ -162,7 +162,7 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     if config is None:
         config = get_config()
     
-    logger.info(f"Initializing for usecase: {usecase}")
+    logger.info(f"Initializing for workflow: {usecase}")
 
     # Initialize LLM with config
     llm_config = config.get_llm_config()
@@ -178,7 +178,15 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     formatter = CLIOutputFormatter(show_raw_output=True)
     executor = GraphExecutor(formatter, probe_manager)
     analyzer = ZeroTrustAnalyzer()
-    orchestrator = CLIOrchestrator(graph_builder, executor, analyzer, config=config)
+    
+    # Pass LLM model to orchestrator for Crew AI initialization
+    orchestrator = CLIOrchestrator(
+        graph_builder, 
+        executor, 
+        analyzer, 
+        config=config,
+        llm_model=model  # ← Pass LLM model for Crew AI executor
+    )
 
     # Print execution header
     _print_execution_header(usecase, config)
@@ -186,10 +194,11 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     # Execute workflow based on usecase
     if "comprehensive" in usecase.lower():
         await orchestrator.run_comprehensive_auditor()
-    elif "Creator" in usecase:
+    elif "creator" in usecase.lower():
         await orchestrator.run_creator()
     else:
-        await orchestrator.run_auditor()
+        logger.warning(f"Unknown workflow: {usecase}. Using comprehensive_auditor as default.")
+        await orchestrator.run_comprehensive_auditor()
 
     # Print final output
     final_output = formatter.get_final_output()

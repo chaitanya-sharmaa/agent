@@ -7,6 +7,7 @@ import json
 from src.langgraphagenticai.LLMS.ollamallm import OllamaLLM
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from src.langgraphagenticai.graph.graph_builder import GraphBuilder
+from src.langgraphagenticai.config.config_loader import get_config
 
 async def main():
     print("=" * 80)
@@ -82,10 +83,11 @@ async def main():
     stage2_results = []
     namespace_resources = {}  # Initialize tracking dict
 
+    config = get_config()
     client = MultiServerMCPClient({
         "kubernetes": {
-            "url": "http://48.194.37.51:3001/mcp",
-            "transport": "streamable_http",
+            "url": config.get_mcp_url(),
+            "transport": config.get_mcp_transport(),
         }
     })
     tools = await client.get_tools()

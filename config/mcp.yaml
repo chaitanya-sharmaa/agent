@@ -4,6 +4,8 @@
 server:
   host: "48.194.37.51"
   port: 3001
+  path: "/mcp"
+  transport: "streamable_http"
   timeout_seconds: 30
   retry_attempts: 3
 

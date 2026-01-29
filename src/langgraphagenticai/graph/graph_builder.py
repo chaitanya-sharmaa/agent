@@ -76,12 +76,6 @@ class GraphBuilder:
         system_prompt = self.config.get_workflow_system_prompt(workflow_id)
         return await self._base_graph(system_prompt, workflow_id)
 
-    async def build_auditor_graph(self):
-        """Return a compiled graph for the Zero Trust Auditor use case.
-        Reads prompt from config/prompts.yaml::workflows.auditor.system_prompt
-        """
-        return await self.build_graph("auditor")
-
     async def build_creator_graph(self):
         """Return a compiled graph for the Zero Trust Creator use case.
         Reads prompt from config/prompts.yaml::workflows.creator.system_prompt

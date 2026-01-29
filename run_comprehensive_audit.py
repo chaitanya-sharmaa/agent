@@ -12,6 +12,11 @@ import asyncio
 import sys
 import os
 
+# Fix encoding early - before Crew AI wraps stdout (Windows compatibility)
+if sys.stdout.encoding and 'utf' not in sys.stdout.encoding.lower():
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # Add repo to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
@@ -24,12 +29,12 @@ def print_header():
     print("COMPREHENSIVE KUBERNETES SECURITY & COMPLIANCE AUDIT")
     print("=" * 80)
     print("\nThis will perform a detailed analysis of:")
-    print("  ✓ All namespaces in the cluster")
-    print("  ✓ Resource inventory (pods, deployments, services, etc.)")
-    print("  ✓ Security posture (RBAC, network policies, pod security)")
-    print("  ✓ Compliance status (CIS Kubernetes Benchmark, standards)")
-    print("  ✓ Configuration issues and best practices")
-    print("  ✓ Detailed recommendations for remediation")
+    print("  [*] All namespaces in the cluster")
+    print("  [*] Resource inventory (pods, deployments, services, etc.)")
+    print("  [*] Security posture (RBAC, network policies, pod security)")
+    print("  [*] Compliance status (CIS Kubernetes Benchmark, standards)")
+    print("  [*] Configuration issues and best practices")
+    print("  [*] Detailed recommendations for remediation")
     print("\nStarting comprehensive audit...\n")
 
 

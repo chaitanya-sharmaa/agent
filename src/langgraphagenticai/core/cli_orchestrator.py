@@ -3,6 +3,7 @@ CLI orchestrator module for managing CLI workflows.
 Handles auditor, creator, and comprehensive auditor flows.
 """
 
+import asyncio
 import logging
 import json
 from typing import Optional
@@ -12,6 +13,11 @@ from src.langgraphagenticai.core.graph_executor import GraphExecutor
 from src.langgraphagenticai.graph.graph_builder import GraphBuilder
 from src.langgraphagenticai.utils.zero_trust_analyzer import ZeroTrustAnalyzer
 from src.langgraphagenticai.utils.live_logger import get_live_logger
+try:
+    from src.langgraphagenticai.integrations.crewai_executor import CrewAIExecutor
+    HAS_CREWAI = True
+except ImportError:
+    HAS_CREWAI = False
 
 logger = logging.getLogger(__name__)
 live_logger = get_live_logger()
@@ -43,6 +49,7 @@ class CLIOrchestrator:
         executor: GraphExecutor,
         analyzer: ZeroTrustAnalyzer,
         config=None,
+        llm_model=None,
     ):
         """
         Initialize the CLI orchestrator.
@@ -52,14 +59,57 @@ class CLIOrchestrator:
             executor: GraphExecutor instance for running workflows
             analyzer: ZeroTrustAnalyzer instance for analysis
             config: Configuration loader instance (optional)
+            llm_model: LLM model instance for Crew AI (optional)
         """
         self.graph_builder = graph_builder
-        self.executor = executor
         self.analyzer = analyzer
         if config is None:
             from src.langgraphagenticai.config.config_loader import get_config
             config = get_config()
         self.config = config
+        
+        # Setup executors based on engine selection
+        execution_engine = self.config.get_execution_engine()
+        self.execution_engine = execution_engine
+        self.graph_executor = executor  # Always keep GraphExecutor for langgraph mode
+        self.crew_ai_executor = None
+        
+        if execution_engine == "crew_ai" and HAS_CREWAI:
+            logger.info("Initializing Crew AI execution engine with multi-agent support")
+            try:
+                # Create CrewAIExecutor with necessary dependencies
+                if llm_model is None:
+                    from src.langgraphagenticai.LLMS.ollamallm import OllamaLLM
+                    llm_config = self.config.get_llm_config()
+                    llm_model = OllamaLLM(llm_config).get_llm_model()
+                
+                from src.langgraphagenticai.utils.cli_output_formatter import CLIOutputFormatter
+                from src.langgraphagenticai.core.probe_manager import ProbeManager
+                
+                formatter = CLIOutputFormatter(show_raw_output=True)
+                PERSISTENT_PROBES_PATH = "/tmp/executed_probes.json"
+                probe_manager = ProbeManager(PERSISTENT_PROBES_PATH)
+                
+                self.crew_ai_executor = CrewAIExecutor(
+                    formatter=formatter,
+                    probe_manager=probe_manager,
+                    config=self.config,
+                    llm_model=llm_model
+                )
+                logger.info("✓ Crew AI executor initialized")
+                print("✓ Crew AI multi-agent executor initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize Crew AI executor: {e}")
+                logger.info("Falling back to LangGraph executor")
+                self.execution_engine = "langgraph"
+        
+        if execution_engine == "langgraph" or self.crew_ai_executor is None:
+            logger.info("Using LangGraph execution engine (default)")
+            self.executor = executor
+            self.execution_engine = "langgraph"
+        else:
+            logger.info("Using Crew AI execution engine with multi-agent support")
+            self.executor = None  # Use crew_ai_executor instead
 
     async def run_comprehensive_auditor(self) -> None:
         """Execute the Comprehensive Security Auditor workflow using the same logic as test_comprehensive.py."""
@@ -155,16 +205,78 @@ class CLIOrchestrator:
 
         client = MultiServerMCPClient({
             "kubernetes": {
-                "url": "http://48.194.37.51:3001/mcp",
-                "transport": "streamable_http",
+                "url": self.config.get_mcp_url(),
+                "transport": self.config.get_mcp_transport(),
             }
         })
         tools = await client.get_tools()
         kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
 
+        # Try to discover supported resource types to avoid errors for missing CRDs
+        available_resources = None
+        list_api_tool = next((t for t in tools if t.name == "list_api_resources"), None)
+        if list_api_tool:
+            try:
+                timeout_seconds = self.config.get_mcp_timeout_seconds() if self.config else 30
+                list_result = await asyncio.wait_for(
+                    list_api_tool.ainvoke({}),
+                    timeout=timeout_seconds
+                )
+                raw_text = ""
+                if isinstance(list_result, dict) and "content" in list_result:
+                    content = list_result.get("content", "")
+                    if isinstance(content, list):
+                        parts = []
+                        for item in content:
+                            if isinstance(item, dict) and "text" in item:
+                                parts.append(str(item.get("text", "")))
+                        raw_text = "\n".join(parts) if parts else str(content)
+                    else:
+                        raw_text = str(content)
+                elif isinstance(list_result, list) and list_result:
+                    parts = []
+                    for item in list_result:
+                        if isinstance(item, dict) and "text" in item:
+                            parts.append(str(item.get("text", "")))
+                        else:
+                            parts.append(str(item))
+                    raw_text = "\n".join(parts)
+                else:
+                    raw_text = str(list_result)
+
+                resources = set()
+                for line in raw_text.splitlines():
+                    line = line.strip()
+                    if not line or line.lower().startswith("name "):
+                        continue
+                    parts = line.split()
+                    if parts:
+                        resources.add(parts[0].lower())
+                if resources:
+                    available_resources = resources
+            except Exception as e:
+                logger.warning(f"Failed to list API resources: {e}")
+
+        if available_resources:
+            resource_types = [rt for rt in resource_types if rt.lower() in available_resources]
+            cluster_resource_types = [rt for rt in cluster_resource_types if rt.lower() in available_resources]
+
+        # Helper function for parallel query execution
+        async def query_resource_in_ns(ns: str, rt: str):
+            """Query single resource type in a namespace."""
+            args = {"resourceType": rt, "namespace": ns, "output": "json"}
+            try:
+                timeout_seconds = self.config.get_mcp_timeout_seconds() if self.config else 30
+                result = await asyncio.wait_for(
+                    kubectl_get_tool.ainvoke(args),
+                    timeout=timeout_seconds
+                )
+                return rt, result, None
+            except Exception as e:
+                return rt, None, str(e)
+
         for ns_idx, ns in enumerate(all_namespaces, 1):
-            print(f"\n📦 Processing namespace {ns_idx}/{len(all_namespaces)}: {ns}")
-            print("=" * 80)
+            print(f"📦 Processing namespace {ns_idx}/{len(all_namespaces)}: {ns}")
             ns_query_count = 0
             ns_tool_calls = []
             ns_results = {}
@@ -184,12 +296,23 @@ class CLIOrchestrator:
                 "configmaps": {"count": 0, "items": []},
             }
 
-            for rt in resource_types:
-                args = {"resourceType": rt, "namespace": ns, "output": "json"}
+            # Execute all resource queries in PARALLEL for this namespace
+            query_tasks = [query_resource_in_ns(ns, rt) for rt in resource_types]
+            parallel_results = await asyncio.gather(*query_tasks, return_exceptions=True)
+
+            for item in parallel_results:
+                if isinstance(item, Exception):
+                    continue
+                rt, result, error = item
                 ns_query_count += 1
                 total_queries += 1
+                
+                if error:
+                    ns_tool_calls.append(f"kubectl_get({rt})")
+                    ns_results[rt] = {"error": error}
+                    continue
+
                 try:
-                    result = await kubectl_get_tool.ainvoke(args)
                     ns_tool_calls.append(f"kubectl_get({rt})")
                     ns_results[rt] = result
 
@@ -202,23 +325,13 @@ class CLIOrchestrator:
                         items = parsed.get("items", [])
                         namespace_resources[ns][rt]["count"] = len(items)
                         namespace_resources[ns][rt]["items"] = items
-                        
-                        # DEBUG: Print first item structure
-                        if items and len(items) > 0:
-                            print(f"\n      [DEBUG {rt}] First item keys: {list(items[0].keys()) if isinstance(items[0], dict) else 'not a dict'}")
-                            if isinstance(items[0], dict):
-                                print(f"      [DEBUG {rt}] name: {items[0].get('name')}")
-                                print(f"      [DEBUG {rt}] status keys: {list(items[0].get('status', {}).keys()) if isinstance(items[0].get('status'), dict) else 'no status'}")
-                                if isinstance(items[0].get('status'), dict):
-                                    print(f"      [DEBUG {rt}] status.phase: {items[0].get('status', {}).get('phase')}")
 
                     if isinstance(result, dict) and "content" in result:
                         stage2_results.append(result["content"])
                     else:
                         stage2_results.append(str(result))
                 except Exception as e:
-                    ns_tool_calls.append(f"kubectl_get({rt}) [error: {e}]")
-                    ns_results[rt] = {"error": str(e)}
+                    logger.debug(f"Error processing {rt} in {ns}: {e}")
 
             print(f"  ✅ Executed {ns_query_count} queries for {ns}")
             print(f"     Tool calls: {', '.join(ns_tool_calls)}")
@@ -251,7 +364,7 @@ class CLIOrchestrator:
                         items = result_data["items"]
                         if items:
                             print(f"      ✓ Found {len(items)} {rt}")
-                            for item in items[:2]:
+                            for item in items:
                                 name = item.get("name", "unknown")
                                 print(f"        - {name}")
                         else:
@@ -268,7 +381,11 @@ class CLIOrchestrator:
             try:
                 args = {"resourceType": crt, "output": "json"}
                 total_queries += 1
-                result = await kubectl_get_tool.ainvoke(args)
+                timeout_seconds = self.config.get_mcp_timeout_seconds() if self.config else 30
+                result = await asyncio.wait_for(
+                    kubectl_get_tool.ainvoke(args),
+                    timeout=timeout_seconds
+                )
                 parsed = None
                 if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict) and "text" in result[0]:
                     parsed = json.loads(result[0]["text"])
@@ -565,41 +682,16 @@ class CLIOrchestrator:
 
         print("\n" + "=" * 80)
 
-    async def run_auditor(self) -> None:
-        """Execute the Zero Trust Auditor workflow."""
-        logger.info("Starting Zero Trust Auditor")
-        live_logger.section("ZERO TRUST AUDITOR")
-        live_logger.info("📊 Analyzing your Kubernetes cluster for security compliance...")
-        print("\n" + "🔐 ZERO TRUST AUDITOR ".center(70, "="))
-        print("📊 Analyzing your Kubernetes cluster for security compliance...\n")
-
-        live_logger.subsection("Gathering Cluster Data")
-        auditor_graph = await self.graph_builder.build_auditor_graph()
-        user_message = "Execute Zero Trust Auditor checks now. Use available tools as needed to gather cluster data and provide a final assessment."
-
-        live_logger.info("🔍 Running security checks...")
-        tool_results, _ = await self.executor.execute_graph(
-            auditor_graph,
-            user_message,
-            max_events=200,
-            required_probe_prefixes=self.REQUIRED_PROBES,
-        )
-
-        live_logger.subsection("Generating Assessment Report")
-        print("\n📋 GENERATING ASSESSMENT REPORT...")
-        self._print_assessment(tool_results, "pre-deploy")
-        live_logger.status("Auditor analysis completed")
-
     async def run_creator(self) -> None:
         """Execute the Zero Trust Creator workflow (audit + deploy + verify)."""
         logger.info("Starting Zero Trust Creator")
         live_logger.section("ZERO TRUST CREATOR")
-        live_logger.step(1, 3, "Initial Security Audit")
+        live_logger.step(1, 3, "Initial Comprehensive Security Audit")
         print("\n" + "🛡️  ZERO TRUST CREATOR ".center(70, "="))
-        print("📋 Step 1: Initial Security Audit\n")
+        print("📋 Step 1: Initial Comprehensive Security Audit\n")
 
-        # Step 1: Run initial audit
-        await self.run_auditor()
+        # Step 1: Run comprehensive initial audit
+        await self.run_comprehensive_auditor()
 
         # Step 2: Deploy Helm chart
         live_logger.step(2, 3, "Deploying Authorization Policies")
@@ -615,15 +707,26 @@ class CLIOrchestrator:
         """Deploy the authorization policy Helm chart."""
         print("📦 Installing Helm chart: authorization-policy\n")
 
-        creator_graph = await self.graph_builder.build_creator_graph()
         deploy_message = self._get_helm_deploy_message()
 
-        tool_results, _ = await self.executor.execute_graph(
-            creator_graph,
-            deploy_message,
-            max_events=100,
-            stop_on_tool_names={"upgrade_helm_chart", "install_helm_chart"},
-        )
+        if self.execution_engine == "crew_ai" and self.crew_ai_executor:
+            print("🤖 Using Crew AI agent for Helm deployment\n")
+            from src.langgraphagenticai.tools.kubernetes_tool import get_tools
+            tools = await get_tools()
+            tool_results, _ = await self.crew_ai_executor.execute_workflow(
+                workflow_id="creator",
+                user_message=deploy_message,
+                tools=tools,
+            )
+        else:
+            # LangGraph execution (default)
+            creator_graph = await self.graph_builder.build_creator_graph()
+            tool_results, _ = await self.graph_executor.execute_graph(
+                creator_graph,
+                deploy_message,
+                max_events=100,
+                stop_on_tool_names={"upgrade_helm_chart", "install_helm_chart"},
+            )
 
         if tool_results:
             print("\n✓ Deployment completed successfully")
@@ -634,15 +737,25 @@ class CLIOrchestrator:
         """Verify the cluster state after deployment."""
         print("🔍 Re-running audit to verify changes...\n")
 
-        auditor_graph = await self.graph_builder.build_auditor_graph()
         user_message = "Execute Zero Trust Auditor checks now. Use available tools as needed to gather cluster data and provide a final assessment."
 
-        tool_results, _ = await self.executor.execute_graph(
-            auditor_graph,
-            user_message,
-            max_events=200,
-            required_probe_prefixes=self.REQUIRED_PROBES,
-        )
+        if self.execution_engine == "crew_ai" and self.crew_ai_executor:
+            print("🤖 Using Crew AI agent for post-deployment verification\n")
+            from src.langgraphagenticai.tools.kubernetes_tool import get_tools
+            tools = await get_tools()
+            tool_results, _ = await self.crew_ai_executor.execute_workflow(
+                workflow_id="comprehensive_auditor",
+                user_message=user_message,
+                tools=tools,
+            )
+        else:
+            # LangGraph execution (default) - use comprehensive auditor for verification
+            verification_graph = await self.graph_builder.setup_graph("comprehensive_auditor")
+            tool_results, _ = await self.graph_executor.execute_graph(
+                verification_graph,
+                user_message,
+                max_events=200,
+            )
 
         self._print_assessment(tool_results, "post-deploy")
 

@@ -3,6 +3,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from src.langgraphagenticai.utils.zero_trust_analyzer import ZeroTrustAnalyzer
 from src.langgraphagenticai.utils.cli_output_formatter import CLIOutputFormatter
+from src.langgraphagenticai.config.config_loader import get_config
 import json
 
 class DisplayResultStreamlit:
@@ -213,14 +214,60 @@ class DisplayResultStreamlit:
             query_count = 0
 
             # Initialize MCP client and kubectl_get tool
+            config = get_config()
             client = MultiServerMCPClient({
                 "kubernetes": {
-                    "url": "http://48.194.37.51:3001/mcp",
-                    "transport": "streamable_http",
+                    "url": config.get_mcp_url(),
+                    "transport": config.get_mcp_transport(),
                 }
             })
             tools = await client.get_tools()
             kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
+
+            # Filter resource types to those supported by the cluster
+            available_resources = None
+            list_api_tool = next((t for t in tools if t.name == "list_api_resources"), None)
+            if list_api_tool:
+                try:
+                    list_result = await list_api_tool.ainvoke({})
+                    raw_text = ""
+                    if isinstance(list_result, dict) and "content" in list_result:
+                        content = list_result.get("content", "")
+                        if isinstance(content, list):
+                            parts = []
+                            for item in content:
+                                if isinstance(item, dict) and "text" in item:
+                                    parts.append(str(item.get("text", "")))
+                            raw_text = "\n".join(parts) if parts else str(content)
+                        else:
+                            raw_text = str(content)
+                    elif isinstance(list_result, list) and list_result:
+                        parts = []
+                        for item in list_result:
+                            if isinstance(item, dict) and "text" in item:
+                                parts.append(str(item.get("text", "")))
+                            else:
+                                parts.append(str(item))
+                        raw_text = "\n".join(parts)
+                    else:
+                        raw_text = str(list_result)
+
+                    resources = set()
+                    for line in raw_text.splitlines():
+                        line = line.strip()
+                        if not line or line.lower().startswith("name "):
+                            continue
+                        parts = line.split()
+                        if parts:
+                            resources.add(parts[0].lower())
+                    if resources:
+                        available_resources = resources
+                except Exception:
+                    available_resources = None
+
+            if available_resources:
+                resource_types = [rt for rt in resource_types if rt.lower() in available_resources]
+                cluster_resources = [rt for rt in cluster_resources if rt.lower() in available_resources]
             
             # Query each namespace for each resource type
             for ns_idx, ns in enumerate(namespaces, 1):
@@ -652,14 +699,60 @@ OUTPUT ONLY THE JSON ABOVE.'''
         cluster_resources = {crt: {"count": 0, "items": []} for crt in cluster_resource_types}
         progress_placeholder = st.empty()
 
+        config = get_config()
         client = MultiServerMCPClient({
             "kubernetes": {
-                "url": "http://48.194.37.51:3001/mcp",
-                "transport": "streamable_http",
+                "url": config.get_mcp_url(),
+                "transport": config.get_mcp_transport(),
             }
         })
         tools = await client.get_tools()
         kubectl_get_tool = next(t for t in tools if t.name == "kubectl_get")
+
+        # Filter resource types to those supported by the cluster
+        available_resources = None
+        list_api_tool = next((t for t in tools if t.name == "list_api_resources"), None)
+        if list_api_tool:
+            try:
+                list_result = await list_api_tool.ainvoke({})
+                raw_text = ""
+                if isinstance(list_result, dict) and "content" in list_result:
+                    content = list_result.get("content", "")
+                    if isinstance(content, list):
+                        parts = []
+                        for item in content:
+                            if isinstance(item, dict) and "text" in item:
+                                parts.append(str(item.get("text", "")))
+                        raw_text = "\n".join(parts) if parts else str(content)
+                    else:
+                        raw_text = str(content)
+                elif isinstance(list_result, list) and list_result:
+                    parts = []
+                    for item in list_result:
+                        if isinstance(item, dict) and "text" in item:
+                            parts.append(str(item.get("text", "")))
+                        else:
+                            parts.append(str(item))
+                    raw_text = "\n".join(parts)
+                else:
+                    raw_text = str(list_result)
+
+                resources = set()
+                for line in raw_text.splitlines():
+                    line = line.strip()
+                    if not line or line.lower().startswith("name "):
+                        continue
+                    parts = line.split()
+                    if parts:
+                        resources.add(parts[0].lower())
+                if resources:
+                    available_resources = resources
+            except Exception:
+                available_resources = None
+
+        if available_resources:
+            resource_types = [rt for rt in resource_types if rt.lower() in available_resources]
+            cluster_resource_types = [rt for rt in cluster_resource_types if rt.lower() in available_resources]
 
         for ns_idx, ns in enumerate(all_namespaces, 1):
             progress_placeholder.markdown(f"Processing namespace {ns_idx}/{len(all_namespaces)}: **{ns}**")

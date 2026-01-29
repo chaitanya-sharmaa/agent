@@ -8,6 +8,7 @@ from langgraph.prebuilt import ToolNode
 import asyncio
 import logging
 from src.langgraphagenticai.tools.local_stub_tools import make_stub_tools
+from src.langgraphagenticai.config.config_loader import get_config
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,14 @@ async def get_tools():
     return local stub tools to allow offline testing.
     """
     if _HAS_MCP:
+        config = get_config()
+        url = config.get_mcp_url()
+        transport = config.get_mcp_transport()
         client = MultiServerMCPClient(
             {
                 "kubernetes": {
-                    "url": "http://48.194.37.51:3001/mcp",
-                    "transport": "streamable_http",
+                    "url": url,
+                    "transport": transport,
                 }
             }
         )

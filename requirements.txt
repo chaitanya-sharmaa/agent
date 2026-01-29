@@ -10,3 +10,5 @@ tavily-python
 langchain_mcp_adapters
 langchain_ollama
 tabulate
+crewai
+crewai-tools

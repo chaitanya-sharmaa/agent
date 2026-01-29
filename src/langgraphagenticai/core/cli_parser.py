@@ -10,7 +10,6 @@ from typing import Optional
 class UseCaseType(Enum):
     """Available use case types."""
 
-    AUDITOR = "auditor"
     CREATOR = "creator"
     COMPREHENSIVE_AUDITOR = "comprehensive_auditor"
 
@@ -41,15 +40,12 @@ class CLIArgumentParser:
 
         subparsers = parser.add_subparsers(dest="command")
         subparsers.add_parser(
-            "auditor", help="Run Zero Trust Auditor (audit-only)"
+            "comprehensive_auditor",
+            help="Run Comprehensive Security Auditor (deep analysis)",
         )
         subparsers.add_parser(
             "creator",
             help="Run Zero Trust Creator (audit + deploy + verify)",
-        )
-        subparsers.add_parser(
-            "comprehensive_auditor",
-            help="Run Comprehensive Security Auditor (deep analysis)",
         )
         
         return parser
@@ -75,16 +71,14 @@ class CLIArgumentParser:
         Returns:
             Usecase string (workflow ID)
         """
-        if command and command.lower() in ("auditor", "audit"):
-            return "auditor"
-        elif command and command.lower() in ("creator", "create"):
+        if command and command.lower() in ("creator", "create"):
             return "creator"
-        elif command and command.lower() in ("comprehensive_auditor", "comprehensive"):
+        elif command and command.lower() in ("comprehensive_auditor", "comprehensive", "audit"):
             return "comprehensive_auditor"
         else:
             if command:
-                print(f"Unknown command: '{command}'. Defaulting to auditor.")
-            return "auditor"
+                print(f"Unknown command: '{command}'. Defaulting to comprehensive_auditor.")
+            return "comprehensive_auditor"
 
     def get_command_from_user(self) -> str:
         """
@@ -93,5 +87,5 @@ class CLIArgumentParser:
         Returns:
             User-selected command
         """
-        cmd = input("Enter command (auditor/creator): ").strip()
+        cmd = input("Enter command (comprehensive_auditor/creator): ").strip()
         return self.get_usecase_from_command(cmd)
