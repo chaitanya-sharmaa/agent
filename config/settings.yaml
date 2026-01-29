@@ -30,7 +30,7 @@ llm:
   model: "mistral:latest"
   temperature: 0.3
   max_tokens: 2000
-  timeout_seconds: 60
+  timeout_seconds: 120  # Increased from 60 to allow longer-running audits
 
 # Crew AI Configuration (only used if execution_engine == "crew_ai")
 crew_ai:
@@ -89,10 +89,10 @@ crew_ai:
       enabled: false  # Only enabled in creator workflow
   
   # Execution settings
-  max_iterations: 150  # Increased for multi-agent coordination
+  max_iterations: 200  # Increased from 150 for longer audits
   tool_budget_per_workflow:
-    comprehensive_auditor: 400  # Significantly increased for deep analysis
-    creator: 200      # Increased for policy creation
+    comprehensive_auditor: 600  # Increased from 400 for multi-namespace audits
+    creator: 250      # Increased from 200 for policy creation
   
   # Delegation settings
   delegate_to_crew: true  # ← Enable multi-agent collaboration
@@ -100,8 +100,8 @@ crew_ai:
 
 # Graph Execution Settings
 graph:
-  max_events: 200
-  recursion_limit: 50
+  max_events: 400  # Increased from 200 to handle more audit events
+  recursion_limit: 100  # Increased from 50 to allow deeper recursion
   
   # Early stopping conditions
   early_stop:

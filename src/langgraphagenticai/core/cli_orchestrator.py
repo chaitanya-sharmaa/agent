@@ -336,56 +336,35 @@ class CLIOrchestrator:
             print(f"  ✅ Executed {ns_query_count} queries for {ns}")
             print(f"     Tool calls: {', '.join(ns_tool_calls)}")
 
-            print(f"\n  📊 RESOURCES IN {ns}:")
-            for rt in resource_types:
-                print(f"\n    {rt.upper()}:")
-                result_data = ns_results.get(rt)
-                try:
-                    if isinstance(result_data, list) and len(result_data) > 0 and isinstance(result_data[0], dict):
-                        if "text" in result_data[0]:
-                            result_data = json.loads(result_data[0]["text"])
-                        elif "type" in result_data[0] and result_data[0]["type"] == "text":
-                            result_data = json.loads(result_data[0].get("text", "{}"))
-                    elif isinstance(result_data, str):
-                        result_data = json.loads(result_data)
-                    elif isinstance(result_data, dict) and "content" in result_data:
-                        content = result_data["content"]
-                        if isinstance(content, str):
-                            result_data = json.loads(content)
-                        elif isinstance(content, list) and len(content) > 0:
-                            if isinstance(content[0], dict) and "text" in content[0]:
-                                result_data = json.loads(content[0]["text"])
-                            else:
-                                result_data = content[0]
-                        else:
-                            result_data = content
+        print(f"✅ Stage 2 Complete: Executed {total_queries} total queries")
 
-                    if isinstance(result_data, dict) and "items" in result_data:
-                        items = result_data["items"]
-                        if items:
-                            print(f"      ✓ Found {len(items)} {rt}")
-                            for item in items:
-                                name = item.get("name", "unknown")
-                                print(f"        - {name}")
-                        else:
-                            print(f"      No {rt} found")
-                    else:
-                        print(f"      Result: {str(result_data)[:80]}")
-                except Exception as e:
-                    print(f"      Error parsing: {str(e)[:60]}")
-
-        print(f"\n✅ Stage 2 Complete: Executed {total_queries} total queries")
-
-        # Cluster-wide resources
-        for crt in cluster_resource_types:
+        # Cluster-wide resources - PARALLEL execution
+        async def query_cluster_resource(crt: str):
+            """Query single cluster-wide resource."""
+            args = {"resourceType": crt, "output": "json"}
             try:
-                args = {"resourceType": crt, "output": "json"}
-                total_queries += 1
                 timeout_seconds = self.config.get_mcp_timeout_seconds() if self.config else 30
                 result = await asyncio.wait_for(
                     kubectl_get_tool.ainvoke(args),
                     timeout=timeout_seconds
                 )
+                return crt, result, None
+            except Exception as e:
+                return crt, None, str(e)
+
+        cluster_tasks = [query_cluster_resource(crt) for crt in cluster_resource_types]
+        cluster_results = await asyncio.gather(*cluster_tasks, return_exceptions=True)
+
+        for item in cluster_results:
+            if isinstance(item, Exception):
+                continue
+            crt, result, error = item
+            total_queries += 1
+            
+            if error:
+                continue
+            
+            try:
                 parsed = None
                 if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict) and "text" in result[0]:
                     parsed = json.loads(result[0]["text"])
