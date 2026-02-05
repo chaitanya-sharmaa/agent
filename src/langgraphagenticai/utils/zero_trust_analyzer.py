@@ -4,6 +4,16 @@ import json
 import yaml
 from typing import Dict, List, Any, Tuple
 from tabulate import tabulate
+from enum import Enum
+
+
+class RiskLevel(Enum):
+    """Security risk severity levels."""
+    CRITICAL = 5
+    HIGH = 4
+    MEDIUM = 3
+    LOW = 2
+    INFO = 1
 
 
 class ZeroTrustAnalyzer:
@@ -19,6 +29,7 @@ class ZeroTrustAnalyzer:
             "network_policies": []
         }
         self.assessment_results = []
+        self.risk_findings = []  # Track findings with risk scores
     
     def parse_kubectl_output(self, output: str) -> Dict[str, Any]:
         """Parse kubectl output from YAML/JSON format."""
@@ -408,8 +419,194 @@ class ZeroTrustAnalyzer:
 
         return "\n".join(lines)
 
+    def _score_finding(self, check_name: str, status: str) -> Dict[str, Any]:
+        """
+        Score a security finding and assign risk level.
+        
+        Args:
+            check_name: Name of the security check
+            status: "Yes", "No", "Partial", etc.
+            
+        Returns:
+            Dict with finding details, risk score, and remediation info
+        """
+        # Risk scoring matrix: check_name -> (passed_status -> risk_level)
+        risk_matrix = {
+            "Istio installed": {
+                "Yes": RiskLevel.INFO,
+                "No": RiskLevel.CRITICAL,
+            },
+            "Istio mode/profile": {
+                "Ambient": RiskLevel.INFO,
+                "Sidecar": RiskLevel.INFO,
+                "None/Default": RiskLevel.CRITICAL,
+            },
+            "Strict mTLS enforced": {
+                "Yes": RiskLevel.INFO,
+                "No": RiskLevel.CRITICAL,
+            },
+            "Default-deny AuthorizationPolicy": {
+                "Yes": RiskLevel.INFO,
+                "No": RiskLevel.HIGH,
+                "Partial": RiskLevel.MEDIUM,
+            },
+            "Allow-only AuthorizationPolicy defined": {
+                "Yes": RiskLevel.INFO,
+                "No": RiskLevel.HIGH,
+                "Partial": RiskLevel.MEDIUM,
+            },
+            "Kubernetes NetworkPolicy default-deny exists": {
+                "Yes": RiskLevel.INFO,
+                "No": RiskLevel.HIGH,
+            },
+            "NetworkPolicies present in all namespaces": {
+                "Yes": RiskLevel.INFO,
+                "Partial": RiskLevel.MEDIUM,
+                "No": RiskLevel.HIGH,
+            },
+        }
+        
+        # Get risk level
+        check_matrix = risk_matrix.get(check_name, {})
+        risk_level = check_matrix.get(status, RiskLevel.MEDIUM)
+        
+        finding = {
+            "check": check_name,
+            "status": status,
+            "risk_level": risk_level.name,
+            "risk_score": risk_level.value,
+            "finding_type": self._get_finding_type(check_name, status),
+        }
+        
+        return finding
+    
+    def _get_finding_type(self, check_name: str, status: str) -> str:
+        """Map check results to finding types for remediation."""
+        if "Istio installed" in check_name and status == "No":
+            return "no_istio"
+        elif "Strict mTLS" in check_name and status == "No":
+            return "no_strict_mtls"
+        elif "AuthorizationPolicy" in check_name and status == "No":
+            return "no_authz_policy"
+        elif "NetworkPolicy" in check_name and "default-deny" in check_name and status == "No":
+            return "no_default_deny_network"
+        elif "NetworkPolicy" in check_name and status in ("No", "Partial"):
+            return "no_network_policy"
+        return "unknown"
+    
+    def get_risk_summary(self) -> Dict[str, Any]:
+        """
+        Generate a risk summary from all findings.
+        
+        Returns:
+            Dict with total risk score, critical findings count, and summary by severity
+        """
+        if not self.risk_findings:
+            return {
+                "total_risk_score": 0,
+                "risk_rating": "PASS",
+                "critical_count": 0,
+                "high_count": 0,
+                "medium_count": 0,
+                "low_count": 0,
+                "findings": []
+            }
+        
+        total_score = sum(f.get("risk_score", 0) for f in self.risk_findings)
+        max_possible = 5 * len(self.risk_findings)
+        
+        # Determine overall rating
+        severity_counts = {
+            "CRITICAL": sum(1 for f in self.risk_findings if f.get("risk_level") == "CRITICAL"),
+            "HIGH": sum(1 for f in self.risk_findings if f.get("risk_level") == "HIGH"),
+            "MEDIUM": sum(1 for f in self.risk_findings if f.get("risk_level") == "MEDIUM"),
+            "LOW": sum(1 for f in self.risk_findings if f.get("risk_level") == "LOW"),
+        }
+        
+        if severity_counts["CRITICAL"] > 0:
+            risk_rating = "CRITICAL"
+        elif severity_counts["HIGH"] > 2:
+            risk_rating = "HIGH"
+        elif severity_counts["HIGH"] > 0 or severity_counts["MEDIUM"] > 3:
+            risk_rating = "MEDIUM"
+        elif severity_counts["MEDIUM"] > 0 or severity_counts["LOW"] > 0:
+            risk_rating = "LOW"
+        else:
+            risk_rating = "PASS"
+        
+        return {
+            "total_risk_score": total_score,
+            "max_risk_score": max_possible,
+            "risk_percentage": (total_score / max_possible * 100) if max_possible > 0 else 0,
+            "risk_rating": risk_rating,
+            "critical_count": severity_counts["CRITICAL"],
+            "high_count": severity_counts["HIGH"],
+            "medium_count": severity_counts["MEDIUM"],
+            "low_count": severity_counts["LOW"],
+            "findings": self.risk_findings
+        }
+
+    def _generate_risk_summary_table(self) -> str:
+        """Generate a visual risk summary table."""
+        summary = self.get_risk_summary()
+        
+        risk_rating = summary.get("risk_rating", "UNKNOWN")
+        risk_emoji = {
+            "CRITICAL": "🔴",
+            "HIGH": "🟠",
+            "MEDIUM": "🟡",
+            "LOW": "🟢",
+            "PASS": "✅"
+        }.get(risk_rating, "❓")
+        
+        summary_data = [
+            ["Overall Risk Rating", f"{risk_emoji} {risk_rating}"],
+            ["Risk Score", f"{summary.get('total_risk_score', 0)}/{summary.get('max_risk_score', 0)}"],
+            ["Risk Percentage", f"{summary.get('risk_percentage', 0):.1f}%"],
+            ["CRITICAL Findings", summary.get("critical_count", 0)],
+            ["HIGH Findings", summary.get("high_count", 0)],
+            ["MEDIUM Findings", summary.get("medium_count", 0)],
+            ["LOW Findings", summary.get("low_count", 0)],
+        ]
+        
+        headers = ["Metric", "Value"]
+        table = tabulate(summary_data, headers=headers, tablefmt="grid")
+        return table
+
+    def _generate_findings_by_severity_table(self) -> str:
+        """Generate findings sorted by severity."""
+        summary = self.get_risk_summary()
+        findings = summary.get("findings", [])
+        
+        if not findings:
+            return "No security findings detected (all checks passed)."
+        
+        # Sort by risk score descending
+        sorted_findings = sorted(findings, key=lambda f: f.get("risk_score", 0), reverse=True)
+        
+        table_data = []
+        for finding in sorted_findings:
+            risk_emoji = {
+                "CRITICAL": "🔴",
+                "HIGH": "🟠",
+                "MEDIUM": "🟡",
+                "LOW": "🟢",
+                "INFO": "ℹ️"
+            }.get(finding.get("risk_level", "UNKNOWN"), "❓")
+            
+            table_data.append([
+                f"{risk_emoji} {finding.get('risk_level', 'UNKNOWN')}",
+                finding.get("check", "Unknown"),
+                finding.get("status", "Unknown"),
+                f"{finding.get('risk_score', 0)}/5"
+            ])
+        
+        headers = ["Severity", "Check", "Status", "Risk Score"]
+        table = tabulate(table_data, headers=headers, tablefmt="grid")
+        return table
+
     def generate_assessment_table(self) -> str:
-        """Generate the final Zero Trust assessment table and append evidence lines."""
+        """Generate the final Zero Trust assessment table with risk scoring and evidence."""
         # Run all checks
         checks = [
             ("Istio installed", self.check_istio_installed()),
@@ -421,20 +618,56 @@ class ZeroTrustAnalyzer:
             ("NetworkPolicies present in all namespaces", self.check_network_policies_coverage())
         ]
         
-        # Format results
+        # Score all findings and build table data
+        self.risk_findings = []
         table_data = []
         for check_name, (status, details) in checks:
-            table_data.append([check_name, status, details])
+            finding = self._score_finding(check_name, status)
+            self.risk_findings.append(finding)
+            
+            risk_emoji = {
+                "CRITICAL": "🔴",
+                "HIGH": "🟠",
+                "MEDIUM": "🟡",
+                "LOW": "🟢",
+                "INFO": "ℹ️"
+            }.get(finding.get("risk_level", "UNKNOWN"), "❓")
+            
+            table_data.append([
+                check_name,
+                status,
+                details,
+                f"{risk_emoji} {finding.get('risk_level', 'UNKNOWN')}"
+            ])
         
-        # Generate table
-        headers = ["Check Description", "Status", "Details"]
-        table = tabulate(table_data, headers=headers, tablefmt="grid")
-
-        # Append evidence summary to improve traceability and avoid hallucination
+        # Generate tables
+        headers = ["Check Description", "Status", "Details", "Risk Level"]
+        assessment_table = tabulate(table_data, headers=headers, tablefmt="grid")
+        
+        # Risk summary
+        risk_summary_table = self._generate_risk_summary_table()
+        findings_by_severity = self._generate_findings_by_severity_table()
+        
+        # Evidence summary
         evidence = self._evidence_summary()
         evidence_block = f"\n\nEvidence:\n{evidence}\n"
         
-        return f"\n\n=== Zero Trust Security Assessment ===\n\n{table}{evidence_block}"
+        return f"""
+
+=== Zero Trust Security Assessment with Risk Scoring ===
+
+{risk_summary_table}
+
+=== Assessment Details ===
+
+{assessment_table}
+
+=== Findings by Severity ===
+
+{findings_by_severity}
+
+{evidence_block}"""
+
     
     def analyze_and_generate_report(self, tool_results: List[Any]) -> str:
         """Main method to analyze tool results and generate report."""
