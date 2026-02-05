@@ -169,7 +169,7 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     formatter = CLIOutputFormatter(show_raw_output=True)
     executor = GraphExecutor(formatter, probe_manager)
     analyzer = ZeroTrustAnalyzer()
-    orchestrator = CLIOrchestrator(graph_builder, executor, analyzer, config)
+    orchestrator = CLIOrchestrator(graph_builder, executor, analyzer)
 
     # Print execution header
     _print_execution_header(usecase, config)
