@@ -26,15 +26,7 @@ def create_synthesizer_node():
       `state['tool_results_cache']` (tests pass this list in and expect it to be
       mutated).
     """
-    try:
-        from langchain_core.messages import ToolMessage
-    except Exception:
-        # Fallback simple message holder if langchain_core is not available
-        class ToolMessage:  # type: ignore
-            def __init__(self, content, tool_call_id=None, tool_name=None):
-                self.content = content
-                self.tool_call_id = tool_call_id
-                self.tool_name = tool_name
+    from langchain_core.messages import ToolMessage
 
     def _synth(state: dict):
         msgs = state.get("messages", []) or []

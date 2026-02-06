@@ -66,3 +66,11 @@ ui:
     tool_outputs: true
     raw_results: true
     debug_info: true
+# Persistence Settings
+persistence:
+  # Location of executed probes cache (relative to project root)
+  probes_file: "__blobstorage__/executed_probes.json"
+  # Automatically clear probes older than X days (0 = never clear)
+  probes_ttl_days: 0
+  # Location of execution logs
+  logs_dir: "__blobstorage__/logs"

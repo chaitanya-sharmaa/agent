@@ -2,9 +2,12 @@
 
 import json
 import yaml
+import logging
 from typing import Dict, List, Any, Tuple
 from tabulate import tabulate
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class RiskLevel(Enum):
@@ -26,23 +29,57 @@ class ZeroTrustAnalyzer:
             "daemonsets": [],
             "peer_authentications": [],
             "authorization_policies": [],
-            "network_policies": []
+            "network_policies": [],
+            "cluster_roles": [],
+            "cluster_role_bindings": []
         }
         self.assessment_results = []
         self.risk_findings = []  # Track findings with risk scores
+        self.namespace_inventory: Dict[str, Dict[str, int]] = {}
     
-    def parse_kubectl_output(self, output: str) -> Dict[str, Any]:
+    def parse_kubectl_output(self, output: Any) -> Dict[str, Any]:
         """Parse kubectl output from YAML/JSON format."""
+        normalized_output: Any = output
+
+        # MCP tools may return a list of content blocks or dicts; normalize to text
+        if isinstance(output, dict) and "items" in output:
+            return output
+        if isinstance(output, list):
+            texts: List[str] = []
+            for part in output:
+                if isinstance(part, dict) and "text" in part:
+                    texts.append(str(part.get("text", "")))
+                elif isinstance(part, str):
+                    texts.append(part)
+            normalized_output = "\n".join([t for t in texts if t])
+        elif isinstance(output, dict) and "text" in output:
+            normalized_output = output.get("text", "")
+        elif isinstance(output, (bytes, bytearray)):
+            normalized_output = output.decode("utf-8", errors="ignore")
+        elif not isinstance(output, str):
+            normalized_output = str(output)
+
+        if isinstance(normalized_output, str) and not normalized_output.strip():
+            return {"items": []}
+
         try:
             # Try parsing as YAML first (kubectl default)
-            data = yaml.safe_load(output)
+            data = yaml.safe_load(normalized_output)
+            if data is None:
+                raise ValueError("Empty YAML output")
             return data
-        except:
+        except Exception as yaml_err:
             try:
-                # Fallback to JSON
-                data = json.loads(output)
+                # Try JSON as fallback
+                data = json.loads(normalized_output)
+                if not data:
+                    raise ValueError("Empty JSON output")
                 return data
-            except:
+            except Exception as json_err:
+                snippet = str(normalized_output)[:100]
+                logger.error(
+                    f"Failed to parse tool output (YAML: {yaml_err}, JSON: {json_err}): {snippet}"
+                )
                 return {"items": []}
     
     def _get_item_name(self, item: Dict[str, Any]) -> str:
@@ -76,6 +113,23 @@ class ZeroTrustAnalyzer:
             or ""
         )
 
+    def _resource_kind_from_type(self, resource_type: str) -> str:
+        """Map resourceType to Kubernetes kind name."""
+        mapping = {
+            "namespaces": "Namespace",
+            "pods": "Pod",
+            "deployments": "Deployment",
+            "daemonsets": "DaemonSet",
+            "statefulsets": "StatefulSet",
+            "rolebindings": "RoleBinding",
+            "networkpolicies": "NetworkPolicy",
+            "clusterroles": "ClusterRole",
+            "clusterrolebindings": "ClusterRoleBinding",
+            "peerauthentication": "PeerAuthentication",
+            "authorizationpolicy": "AuthorizationPolicy",
+        }
+        return mapping.get(str(resource_type).lower(), str(resource_type))
+
     def _merge_resources(self, key: str, new_items: List[Dict[str, Any]]):
         """Merge new_items into self.resources[key], deduplicating by (name, namespace, kind)."""
         if not isinstance(new_items, list):
@@ -90,6 +144,25 @@ class ZeroTrustAnalyzer:
                 existing.append(it)
                 seen.add(key_tuple)
         self.resources[key] = existing
+
+    def _ensure_namespace_entry(self, namespace: str) -> None:
+        """Ensure a namespace entry exists in the inventory."""
+        import re
+        # Only track valid Kubernetes namespace names
+        if namespace and re.match(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$', str(namespace)):
+            self.namespace_inventory.setdefault(namespace, {})
+
+    def _track_namespace_resource_item(self, resource_type: str, item: Dict[str, Any]) -> None:
+        """Track a resource item against its namespace for per-namespace reporting."""
+        import re
+        if not isinstance(item, dict):
+            return
+        namespace = self._get_item_namespace(item) or "cluster-scope"
+        # Only track resources in valid Kubernetes namespaces
+        if namespace != "cluster-scope" and not re.match(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$', str(namespace)):
+            return
+        entry = self.namespace_inventory.setdefault(namespace, {})
+        entry[resource_type] = entry.get(resource_type, 0) + 1
 
     def process_tool_results(self, tool_results: List[Any]):
         """Process tool results and categorize them robustly across different kubectl outputs."""
@@ -107,7 +180,62 @@ class ZeroTrustAnalyzer:
             if not (isinstance(result, dict) and "output" in result):
                 continue
             output = result["output"]
-            parsed = self.parse_kubectl_output(output)
+            resource_type = result.get("resource_type") if isinstance(result, dict) else None
+            namespace = result.get("namespace") if isinstance(result, dict) else None
+
+            # Fast-path: handle `-o name` outputs without YAML/JSON parsing
+            if resource_type and isinstance(output, list):
+                texts: List[str] = []
+                for part in output:
+                    if isinstance(part, dict) and "text" in part:
+                        texts.append(str(part.get("text", "")))
+                    elif isinstance(part, str):
+                        texts.append(part)
+                combined = "\n".join([t for t in texts if t]).strip()
+                if combined:
+                    kind = self._resource_kind_from_type(resource_type)
+                    items = []
+                    for line in combined.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        name = line.split("/", 1)[-1]
+                        items.append(
+                            {
+                                "kind": kind,
+                                "metadata": {
+                                    "name": name,
+                                    "namespace": namespace or "",
+                                },
+                            }
+                        )
+                    parsed = {"items": items}
+                else:
+                    parsed = {"items": []}
+            elif resource_type and isinstance(output, dict) and "text" in output:
+                text = str(output.get("text", "")).strip()
+                if text:
+                    kind = self._resource_kind_from_type(resource_type)
+                    items = []
+                    for line in text.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        name = line.split("/", 1)[-1]
+                        items.append(
+                            {
+                                "kind": kind,
+                                "metadata": {
+                                    "name": name,
+                                    "namespace": namespace or "",
+                                },
+                            }
+                        )
+                    parsed = {"items": items}
+                else:
+                    parsed = {"items": []}
+            else:
+                parsed = self.parse_kubectl_output(output)
 
             # Normalize to a list of items
             items = []
@@ -118,6 +246,24 @@ class ZeroTrustAnalyzer:
                     items = [parsed]
             elif isinstance(parsed, list):
                 items = parsed
+
+            # Handle plain name lists from `kubectl get -o name`
+            if not items:
+                resource_type = result.get("resource_type") if isinstance(result, dict) else None
+                namespace = result.get("namespace") if isinstance(result, dict) else None
+                if isinstance(parsed, str) and resource_type:
+                    lines = [ln.strip() for ln in parsed.splitlines() if ln.strip()]
+                    kind = self._resource_kind_from_type(resource_type)
+                    for line in lines:
+                        name = line.split("/")[-1]
+                        item = {
+                            "kind": kind,
+                            "metadata": {
+                                "name": name,
+                                "namespace": namespace or "",
+                            },
+                        }
+                        items.append(item)
 
             if not items:
                 continue
@@ -134,12 +280,34 @@ class ZeroTrustAnalyzer:
                     if src_tool_call_id:
                         md.setdefault("_evidence_tool_call_id", src_tool_call_id)
 
+            # Track per-namespace inventory for supported resource kinds
+            kind_to_resource = {
+                "pod": "pods",
+                "deployment": "deployments",
+                "daemonset": "daemonsets",
+                "statefulset": "statefulsets",
+                "rolebinding": "rolebindings",
+                "networkpolicy": "networkpolicies",
+            }
+            for it in items:
+                if not isinstance(it, dict):
+                    continue
+                kind = self._get_item_kind(it).lower()
+                resource_type = kind_to_resource.get(kind)
+                if resource_type:
+                    self._track_namespace_resource_item(resource_type, it)
+
             # Inspect sample to infer type but always scan all items for evidence (e.g., istio pods anywhere)
             kinds = { (it.get("kind") or "").lower() for it in items if isinstance(it, dict) }
 
             # Namespaces
             if any(k == "namespace" for k in kinds) or all("name" in it and it.get("kind", "").lower() == "namespace" for it in items if isinstance(it, dict)):
                 self._merge_resources("namespaces", items)
+                for it in items:
+                    if isinstance(it, dict):
+                        name = self._get_item_name(it)
+                        if name:
+                            self._ensure_namespace_entry(name)
                 continue
 
             # Pods: mark istio_pods if any item is in istio-system or name contains 'istio'
@@ -178,7 +346,17 @@ class ZeroTrustAnalyzer:
                 self._merge_resources("network_policies", items)
                 continue
 
-            # Fallback: position-based assignment
+            # ClusterRole
+            if any(k in ("clusterrole",) for k in kinds) or any("clusterrole" in (it.get("kind", "").lower()) for it in items if isinstance(it, dict)):
+                self._merge_resources("cluster_roles", items)
+                continue
+
+            # ClusterRoleBinding
+            if any(k in ("clusterrolebinding",) for k in kinds) or any("clusterrolebinding" in (it.get("kind", "").lower()) for it in items if isinstance(it, dict)):
+                self._merge_resources("cluster_role_bindings", items)
+                continue
+
+            # If unable to categorize, log warning and attempt position-based assignment as last resort
             if idx < len(resource_order):
                 resource_key = resource_order[idx]
                 self.resources[resource_key] = items
@@ -379,15 +557,21 @@ class ZeroTrustAnalyzer:
         return "No", "No NetworkPolicies found in any namespace"    
     def _evidence_summary(self) -> str:
         """Return a short evidence summary string listing key found resources."""
+        import re
+        
+        # Get valid namespace names
+        def is_valid_ns(name: str) -> bool:
+            return bool(re.match(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$', str(name)))
+        
         ns = { (n.get("metadata", {}).get("name") or n.get("name") or "") for n in (self.resources.get("namespaces") or []) }
-        ns = sorted([n for n in ns if n])
+        ns = sorted([n for n in ns if is_valid_ns(n)])
 
         def _format_with_source(item):
             name = self._get_item_name(item)
-            ns = self._get_item_namespace(item)
+            ns_name = self._get_item_namespace(item)
             src = (item.get("metadata", {}).get("_evidence_source") or "").strip()
             tcid = (item.get("metadata", {}).get("_evidence_tool_call_id") or "").strip()
-            base = name + (f" ({ns})" if ns else "")
+            base = name + (f" ({ns_name})" if ns_name else "")
             if src or tcid:
                 return f"{base} [{src}:{tcid}]"
             return f"{base} [unverified]"
@@ -408,14 +592,20 @@ class ZeroTrustAnalyzer:
 
         peer_auth_ns = [ (pa.get("metadata", {}).get("namespace") or "cluster-wide") for pa in (self.resources.get("peer_authentications") or []) ]
         netpol_ns = sorted({ (np.get("metadata", {}).get("namespace") or np.get("namespace") or "") for np in (self.resources.get("network_policies") or []) if (np.get("metadata", {}).get("namespace") or np.get("namespace")) })
+        # Filter netpol_ns to only valid namespace names
+        netpol_ns = [n for n in netpol_ns if is_valid_ns(n)]
 
         lines = []
-        lines.append(f"Namespaces found: {', '.join(ns) if ns else 'none'}")
-        lines.append(f"Istio-related pods: {', '.join(istio_pods) if istio_pods else 'none'}")
-        lines.append(f"Istiod pods: {', '.join(istiod_pods) if istiod_pods else 'none'}")
-        lines.append(f"ztunnel daemonsets: {', '.join(ztunnel_ds) if ztunnel_ds else 'none'}")
-        lines.append(f"PeerAuthentication namespaces: {', '.join(sorted(set(peer_auth_ns))) if peer_auth_ns else 'none'}")
-        lines.append(f"NetworkPolicy namespaces: {', '.join(netpol_ns) if netpol_ns else 'none'}")
+        lines.append(f"✅ Namespaces discovered: {len(ns)} total")
+        if ns:
+            lines.append(f"   Sample: {', '.join(ns[:5])}" + (f" ... and {len(ns) - 5} more" if len(ns) > 5 else ""))
+        lines.append(f"🔍 Istio components: {len(istio_pods)} pods found" if istio_pods else "🔍 Istio components: none detected")
+        lines.append(f"📊 Istiod instances: {len(istiod_pods)} found" if istiod_pods else "📊 Istiod instances: none")
+        lines.append(f"🚀 ztunnel daemonsets: {len(ztunnel_ds)} found" if ztunnel_ds else "🚀 ztunnel daemonsets: none")
+        lines.append(f"🔐 PeerAuthentication policies: {len(set(peer_auth_ns))} namespaces" if peer_auth_ns and peer_auth_ns != ["cluster-wide"] else "🔐 PeerAuthentication policies: none")
+        lines.append(f"🛡️  NetworkPolicies: {len(netpol_ns)} namespaces have policies" if netpol_ns else "🛡️  NetworkPolicies: none configured")
+        if netpol_ns:
+            lines.append(f"   Protected: {', '.join(netpol_ns)}")
 
         return "\n".join(lines)
 
@@ -605,7 +795,94 @@ class ZeroTrustAnalyzer:
         table = tabulate(table_data, headers=headers, tablefmt="grid")
         return table
 
-    def generate_assessment_table(self) -> str:
+    def _is_valid_namespace_name(self, name: str) -> bool:
+        """Check if a string is a valid Kubernetes namespace name."""
+        if not isinstance(name, str):
+            return False
+        # Valid namespace names are alphanumeric, hyphens, lowercase only
+        # They should not contain special chars like quotes, braces, colons, etc.
+        import re
+        # Valid format: lowercase alphanumeric and hyphens, 1-63 chars
+        return bool(re.match(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$', name))
+
+    def _generate_namespace_summary_table(self) -> str:
+        """Generate a per-namespace resource coverage and risk table."""
+        if not self.namespace_inventory:
+            return "No namespace inventory available."
+
+        rows = []
+        critical_ns = 0
+        high_risk_ns = 0
+        medium_risk_ns = 0
+        secure_ns = 0
+        
+        # Filter out invalid namespace names (JSON keys, fragments, etc.)
+        valid_namespaces = {
+            ns: counts 
+            for ns, counts in self.namespace_inventory.items() 
+            if self._is_valid_namespace_name(ns)
+        }
+        
+        if not valid_namespaces:
+            return "No valid namespaces found in inventory."
+        
+        for namespace in sorted(valid_namespaces.keys()):
+            counts = valid_namespaces.get(namespace, {})
+            pods = counts.get("pods", 0)
+            deployments = counts.get("deployments", 0)
+            daemonsets = counts.get("daemonsets", 0)
+            statefulsets = counts.get("statefulsets", 0)
+            rolebindings = counts.get("rolebindings", 0)
+            networkpolicies = counts.get("networkpolicies", 0)
+            
+            has_workloads = pods + deployments + daemonsets + statefulsets > 0
+
+            # Risk assessment
+            risk_level = "✅ SECURE"
+            if has_workloads and networkpolicies == 0:
+                risk_level = "🔴 CRITICAL"
+                critical_ns += 1
+            elif not has_workloads and networkpolicies == 0:
+                risk_level = "🟠 HIGH"
+                high_risk_ns += 1
+            elif rolebindings == 0:
+                risk_level = "🟡 MEDIUM"
+                medium_risk_ns += 1
+            else:
+                secure_ns += 1
+
+            rows.append(
+                [
+                    namespace,
+                    pods,
+                    deployments,
+                    daemonsets,
+                    statefulsets,
+                    rolebindings,
+                    networkpolicies,
+                    risk_level,
+                ]
+            )
+
+        headers = [
+            "Namespace",
+            "Pods",
+            "Deploy",
+            "DS",
+            "SS",
+            "RoleBindings",
+            "NetPolicies",
+            "Security Status",
+        ]
+        table = tabulate(rows, headers=headers, tablefmt="grid")
+        
+        # Add summary stats
+        total_ns = len(rows)
+        summary = f"\n📊 Namespace Summary: {total_ns} total | 🔴 {critical_ns} critical | 🟠 {high_risk_ns} high risk | 🟡 {medium_risk_ns} medium | ✅ {secure_ns} secure\n"
+        
+        return summary + table
+
+    def generate_assessment_table(self, elapsed_time: float = None) -> str:
         """Generate the final Zero Trust assessment table with risk scoring and evidence."""
         # Run all checks
         checks = [
@@ -650,26 +927,52 @@ class ZeroTrustAnalyzer:
         
         # Evidence summary
         evidence = self._evidence_summary()
-        evidence_block = f"\n\nEvidence:\n{evidence}\n"
+        evidence_block = f"\n📋 Evidence Summary:\n{evidence}\n"
+
+        namespace_summary = self._generate_namespace_summary_table()
+        
+        # Execution stats
+        exec_stats = ""
+        if elapsed_time:
+            exec_stats = f"\n⏱️  Execution Time: {elapsed_time:.2f}s\n"
         
         return f"""
 
-=== Zero Trust Security Assessment with Risk Scoring ===
+╔{'═' * 78}╗
+║{'🛡️  ZERO TRUST SECURITY ASSESSMENT REPORT'.center(78)}║
+╚{'═' * 78}╝
+{exec_stats}
+{'─' * 80}
+🎯 OVERALL RISK SUMMARY
+{'─' * 80}
 
 {risk_summary_table}
 
-=== Assessment Details ===
+{'─' * 80}
+📋 DETAILED ASSESSMENT CHECKS
+{'─' * 80}
 
 {assessment_table}
 
-=== Findings by Severity ===
+{'─' * 80}
+⚠️  FINDINGS BY SEVERITY
+{'─' * 80}
 
 {findings_by_severity}
 
-{evidence_block}"""
+{'─' * 80}
+🔍 NAMESPACE-LEVEL ANALYSIS
+{'─' * 80}
+
+{namespace_summary}
+
+{'─' * 80}
+{evidence_block}
+{'═' * 80}
+"""
 
     
-    def analyze_and_generate_report(self, tool_results: List[Any]) -> str:
+    def analyze_and_generate_report(self, tool_results: List[Any], elapsed_time: float = None) -> str:
         """Main method to analyze tool results and generate report."""
         self.process_tool_results(tool_results)
-        return self.generate_assessment_table()
+        return self.generate_assessment_table(elapsed_time)

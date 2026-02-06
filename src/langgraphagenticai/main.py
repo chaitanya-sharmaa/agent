@@ -59,6 +59,21 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+
+# Suppress verbose logs from external libraries
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("mcp.client").setLevel(logging.WARNING)
+logging.getLogger("mcp").setLevel(logging.WARNING)
+logging.getLogger("langchain_core").setLevel(logging.WARNING)
+logging.getLogger("langchain").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("langgraphagenticai.live").setLevel(logging.ERROR)
+logging.getLogger("langgraphagenticai.live").propagate = False
+logging.getLogger("src.langgraphagenticai.tools.kubernetes_tool").setLevel(logging.WARNING)
+logging.getLogger("__main__").setLevel(logging.ERROR)
+logging.getLogger("src.langgraphagenticai.core.cli_orchestrator").setLevel(logging.ERROR)
+logging.getLogger("src.langgraphagenticai.utils.zero_trust_analyzer").setLevel(logging.ERROR)
+
 logger = logging.getLogger(__name__)
 live_logger = get_live_logger()
 
@@ -175,8 +190,11 @@ async def _initialize_and_run(usecase: str, config=None) -> None:
     _print_execution_header(usecase, config)
 
     # Execute workflow based on usecase
-    if "Creator" in usecase:
+    usecase_lower = str(usecase).lower()
+    if "creator" in usecase_lower:
         await orchestrator.run_creator()
+    elif "comprehensive" in usecase_lower:
+        await orchestrator.run_comprehensive_auditor()
     else:
         await orchestrator.run_auditor()
 

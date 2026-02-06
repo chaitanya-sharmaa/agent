@@ -106,12 +106,12 @@ workflows:
     description: "Deep security and compliance analysis of entire Kubernetes cluster"
     system_prompt: |
       You are Stage 1 of a Kubernetes security auditor.
-      
+
       YOUR ONLY TASK: Get the list of all namespaces.
-      
+
       Execute this single query:
       kubectl_get(resourceType="namespaces")
-      
+
       Do NOT make any other queries. Just get the namespaces list and report it.
 
     user_prompts:

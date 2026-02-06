@@ -139,8 +139,8 @@ class ChatbotWithToolNode:
             if probe_key and probe_key in persisted:
                 # Returning None indicates caller should drop this tool call
                 return None
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error checking persisted probes: {e}")
 
         return sanitized
 
@@ -234,25 +234,19 @@ class ChatbotWithToolNode:
                 last_message = messages[-1]
                 # Only augment once: if the enforcement text is not already present, append it.
                 enforcement_marker = "IMPORTANT: You MUST use the kubectl_get and kubectl_describe tools"
-                if usecase and ("auditor" in usecase.lower() or "comprehensive" in usecase.lower()) and not isinstance(last_message, SystemMessage):
+                usecase_lower = (usecase or "").lower()
+                if (
+                    usecase_lower
+                    and "auditor" in usecase_lower
+                    and "comprehensive" not in usecase_lower
+                    and not isinstance(last_message, SystemMessage)
+                ):
                     if enforcement_marker not in getattr(last_message, "content", ""):
-                        if "comprehensive" in usecase.lower():
-                            enhanced_content = (
-                                f"{last_message.content}\n\n"
-                                "MANDATORY INSTRUCTIONS:\n"
-                                "1. Query namespaces first\n"
-                                "2. Then for EACH namespace, query: pods, deployments, daemonsets, statefulsets, rolebindings, networkpolicies\n"
-                                "3. Then query cluster-wide: clusterroles, clusterrolebindings, peerauthentication, authorizationpolicy\n"
-                                "4. Make 100+ kubectl_get calls total\n"
-                                "5. Query EVERY namespace without exception\n"
-                                "6. Do NOT stop early"
-                            )
-                        else:
-                            enhanced_content = (
-                                f"{last_message.content}\n\nIMPORTANT: You MUST use the kubectl_get and kubectl_describe tools to collect real cluster data. "
-                                "When checking Pods or DaemonSets, ALWAYS run them with namespace=\"istio-system\" in addition to any other queries. "
-                                "Do NOT return mock data or skip namespaced queries."
-                            )
+                        enhanced_content = (
+                            f"{last_message.content}\n\nIMPORTANT: You MUST use the kubectl_get and kubectl_describe tools to collect real cluster data. "
+                            "When checking Pods or DaemonSets, ALWAYS run them with namespace=\"istio-system\" in addition to any other queries. "
+                            "Do NOT return mock data or skip namespaced queries."
+                        )
                         messages[-1] = type(last_message)(content=enhanced_content)
             except Exception:
                 logger.debug("Could not augment last message for Auditor enforcement")

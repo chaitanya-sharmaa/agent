@@ -38,7 +38,7 @@ class GraphBuilder:
 
         The chatbot node is bound to a model that has tools attached so it can
         produce tool_calls. The tools node is created from `get_tools` which
-        prefers MCP-backed tools but falls back to local stubs.
+        uses MCP to fetch real tools from the Kubernetes server.
         """
         tools = await get_tools()
         tool_node = create_tool_node(tools)

@@ -2,7 +2,7 @@
 # Configure your Model Context Protocol server endpoint and available tools
 
 server:
-  host: "localhost"
+  host: "48.194.37.51"
   port: 3001
   timeout_seconds: 30
   retry_attempts: 3

@@ -1,75 +1,73 @@
-try:
-    from langchain_mcp_adapters.client import MultiServerMCPClient
-    _HAS_MCP = True
-except Exception:
-    _HAS_MCP = False
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from langgraph.prebuilt import ToolNode
 import asyncio
 import logging
-from src.langgraphagenticai.tools.local_stub_tools import make_stub_tools
+
+from src.langgraphagenticai.config.config_loader import get_config
 
 logger = logging.getLogger(__name__)
 
 
 async def get_tools():
     """
-    Return the list of tools to be used. Prefer MCP-backed tools; if unavailable,
-    return local stub tools to allow offline testing.
+    Return the list of MCP-backed tools.
+    Requires langchain_mcp_adapters and accessible MCP server.
+    Will raise an error if MCP tools cannot be loaded.
     """
-    if _HAS_MCP:
+    try:
+        config = get_config()
+        base_url = config.get_mcp_url()
         client = MultiServerMCPClient(
             {
                 "kubernetes": {
-                    "url": "http://48.194.37.51:3001/mcp",
+                    "url": f"{base_url}/mcp",
                     "transport": "streamable_http",
                 }
             }
         )
         tools = await client.get_tools()
+        if not tools:
+            raise ValueError("MCP server returned no tools")
+        logger.info(f"✓ Loaded {len(tools)} tools from MCP server")
         return tools
-
-    logger.warning("langchain_mcp_adapters not available; using local stub tools for offline testing")
-    # Return lightweight stubs usable by ToolNode
-    return make_stub_tools()
+    except ImportError as e:
+        raise ImportError(
+            f"langchain_mcp_adapters not available. Install with: "
+            f"pip install langchain-mcp-adapters. Error: {e}"
+        ) from e
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to load MCP tools from http://48.194.37.51:3001/mcp. "
+            f"Ensure MCP server is running and accessible. Error: {e}"
+        ) from e
 
 
 def create_tool_node(tools):
-    """Create and return a ToolNode; handle both real Tool objects and fallback dicts or callables.
-
-    For dict fallbacks we convert them into simple async callables with a proper __name__ so
-    LangGraph/ToolNode can accept them.
+    """Create and return a ToolNode with strict validation.
+    
+    Requires proper Tool objects from MCP. Does not support fallbacks or stubs.
+    
+    Args:
+        tools: List of langchain Tool objects from MCP
+        
+    Returns:
+        ToolNode configured to handle tool execution errors
+        
+    Raises:
+        ValueError: If tools list is empty or contains invalid tools
     """
-    normalized = []
+    if not tools:
+        raise ValueError("No tools provided to create_tool_node")
+    
+    # Validate all tools are proper objects with required attributes
     for t in tools:
-        # Already a callable/function: ensure it has a name
-        if callable(t) and hasattr(t, "__name__"):
-            normalized.append(t)
-            continue
-
-        # If it's a dict fallback, try to extract the callable
-        if isinstance(t, dict) and "func" in t:
-            func = t.get("func")
-            name = t.get("name") or getattr(func, "__name__", None) or "unnamed_tool"
-
-            # If the func exists, wrap if needed to guarantee correct signature/name
-            if callable(func):
-                # Ensure __name__ matches the expected tool name
-                try:
-                    func.__name__ = name
-                except Exception:
-                    # Some callables don't allow setting __name__; wrap instead
-                    async def _wrapper(*args, __func=func, **kwargs):
-                        if asyncio.iscoroutinefunction(__func):
-                            return await __func(*args, **kwargs)
-                        return __func(*args, **kwargs)
-                    _wrapper.__name__ = name
-                    normalized.append(_wrapper)
-                    continue
-                normalized.append(func)
-                continue
-
-        # Fallback: append as-is and let ToolNode raise a helpful error if unsupported
-        normalized.append(t)
-
-    return ToolNode(tools=normalized, handle_tool_errors=True)
+        if not hasattr(t, 'name') or not hasattr(t, 'func'):
+            raise ValueError(
+                f"Invalid tool object: {t}. "
+                f"Tools must have 'name' and 'func' attributes from MCP. "
+                f"Stubs and fallback callables are not supported."
+            )
+    
+    logger.info(f"✓ Creating ToolNode with {len(tools)} MCP tools")
+    return ToolNode(tools=tools, handle_tool_errors=True)

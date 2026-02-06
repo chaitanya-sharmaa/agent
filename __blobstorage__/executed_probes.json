@@ -1,1 +1,1 @@
-[":", "daemonsets:istio-system", "namespaces:", "pods:istio-system"]
+[":", "clusterroles:", "daemonsets:istio-system", "deployments:lsec", "namespace:", "namespaces:", "networkpolicy:namespace['metadata']['name']", "pods:istio-system", "statefulsets:namespace"]
